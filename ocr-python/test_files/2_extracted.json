@@ -1,0 +1,173 @@
+{
+  "documentType": "Facture",
+  "documentHeader": {
+    "factureNumber": "25-011348",
+    "date": "1, avril 2025",
+    "echeance": "1, avril 2025"
+  },
+  "issuer": {
+    "name": "STEQ",
+    "address": "8, Rue 8601 - Zone Industrielle Charguia I - BP 746 1080 Tunis Cedex",
+    "phone": "71 115 500",
+    "fax": "71 809 402",
+    "email": "steq@planet.tn",
+    "legalInformation": "Société Tunisienne d Equipement: S.A. au Capital de 7.000.000 Dinars",
+    "rc": "B110931 1996Tunis",
+    "codeTVA": "02404B/A/M/000"
+  },
+  "customer": {
+    "codeClient": "1.0245",
+    "name": "STE COMPTOIR LAMINE ET FILS",
+    "address": "000, ROUTE DE TUNIS Z2 HAMM\nHAMMAM SOUSSE, 4011",
+    "codeTVAClient": "BAM000",
+    "modeDePaiement": null,
+    "domiciliation": null
+  },
+  "products": [
+    {
+      "numeroBL": "B25-043076",
+      "date": "25/02/2025",
+      "numeroBC": "CV250043441",
+      "montantHT": "33,546",
+      "tva": "6,374"
+    },
+    {
+      "numeroBL": "B25-043544",
+      "date": "26/02/2025",
+      "numeroBC": "CV250043763",
+      "montantHT": "89,436",
+      "tva": "16,993"
+    },
+    {
+      "numeroBL": "B25-043516",
+      "date": "26/02/2025",
+      "numeroBC": "CV250043897",
+      "montantHT": "488,047",
+      "tva": "92,729"
+    },
+    {
+      "numeroBL": "B25-044290",
+      "date": "27/02/2025",
+      "numeroBC": "CV250044891",
+      "montantHT": "147,922",
+      "tva": "28,105"
+    },
+    {
+      "numeroBL": "B25-044654",
+      "date": "27/02/2025",
+      "numeroBC": "CV250045203",
+      "montantHT": "60,431",
+      "tva": "11,482"
+    },
+    {
+      "numeroBL": "B25-044898",
+      "date": "27/02/2025",
+      "numeroBC": "CV250045204",
+      "montantHT": "61,574",
+      "tva": "11,699"
+    },
+    {
+      "numeroBL": "B25-045393",
+      "date": "28/02/2025",
+      "numeroBC": "CV250045879",
+      "montantHT": "251,548",
+      "tva": "47,794"
+    },
+    {
+      "numeroBL": "B25-045622",
+      "date": "01/03/2025",
+      "numeroBC": "CV250046187",
+      "montantHT": "30,063",
+      "tva": "5,712"
+    },
+    {
+      "numeroBL": "B25-048612",
+      "date": "06/03/2025",
+      "numeroBC": "CV250049172",
+      "montantHT": "143,975",
+      "tva": "27,355"
+    },
+    {
+      "numeroBL": "B25-048820",
+      "date": "06/03/2025",
+      "numeroBC": "CV250049326",
+      "montantHT": "50,139",
+      "tva": "9,526"
+    },
+    {
+      "numeroBL": "B25-048783",
+      "date": "06/03/2025",
+      "numeroBC": "CV250049327",
+      "montantHT": "15,608",
+      "tva": "2,966"
+    },
+    {
+      "numeroBL": "B25-048780",
+      "date": "06/03/2025",
+      "numeroBC": "CV250049328",
+      "montantHT": "31,781",
+      "tva": "6,038"
+    },
+    {
+      "numeroBL": "B25-048890",
+      "date": "06/03/2025",
+      "numeroBC": "CV250049373",
+      "montantHT": "31,005",
+      "tva": "5,891"
+    },
+    {
+      "numeroBL": "B25-048847",
+      "date": "06/03/2025",
+      "numeroBC": "CV250049374",
+      "montantHT": "270,716",
+      "tva": "51,436"
+    },
+    {
+      "numeroBL": "B25-048862",
+      "date": "06/03/2025",
+      "numeroBC": "CV250049380",
+      "montantHT": "42,680",
+      "tva": "8,109"
+    },
+    {
+      "numeroBL": "B25-048845",
+      "date": "06/03/2025",
+      "numeroBC": "CV250049390",
+      "montantHT": "43,954",
+      "tva": "8,351"
+    },
+    {
+      "numeroBL": "B25-049497",
+      "date": "07/03/2025",
+      "numeroBC": "CV250049984",
+      "montantHT": "258,351",
+      "tva": "49,087"
+    },
+    {
+      "numeroBL": "B25-051654",
+      "date": "11/03/2025",
+      "numeroBC": "CV250052049",
+      "montantHT": "42,381",
+      "tva": "8,052"
+    },
+    {
+      "numeroBL": "B25-055841",
+      "date": "19/03/2025",
+      "numeroBC": "CV250056652",
+      "montantHT": "40,5",
+      "tva": "7,695"
+    }
+  ],
+  "taxDetails": {
+    "tauxTVA": "19",
+    "base": "2 133,657",
+    "montantTVA": "405,395"
+  },
+  "paymentDetails": {
+    "totalHT": "2 133,657",
+    "totalTVA": "405,395",
+    "timbre": "1,000",
+    "totalTTC": "2 540.052",
+    "amountInWords": "DEUX MILLE CINQ CENT QUARANTE DINARS CINQUANTE DEUX MILLIMES"
+  }
+}
