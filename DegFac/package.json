@@ -5,8 +5,8 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint"
@@ -27,7 +27,7 @@
     "axios": "^1.8.4",
     "expo": "~52.0.40",
     "expo-blur": "~14.0.3",
-    "expo-camera": "^16.0.18",
+    "expo-camera": "14.0.0",
     "expo-constants": "~17.0.8",
     "expo-document-picker": "~13.0.3",
     "expo-file-system": "^18.0.12",
@@ -50,7 +50,8 @@
     "react-native-screens": "^4.4.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "tesseract.js": "^2.1.1"
+    "tesseract.js": "^2.1.1",
+    "expo-image-manipulator": "~13.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -1,55 +1,66 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const fs = require('fs');
-const path = require('path');
-const { pdfToImage } = require('../utils/pdfConverter');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyAOCbGTDfyyiidMR-993WW8JKGIiHan5ZQ');
 
-async function processDocument(file) {
+async function extractInvoiceData(imageBase64) {
     try {
-        let imageData;
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-        if (file.mimetype === 'application/pdf') {
-            const imagePath = await pdfToImage(file.path);
-            imageData = fs.readFileSync(imagePath);
-            fs.unlinkSync(imagePath); // Supprimer le fichier temporaire
-        } else {
-            imageData = fs.readFileSync(file.path);
-        }
+        const prompt = `
+      Extrayez toutes les informations de cette facture et retournez-les en JSON structuré.
+      Incluez les champs suivants:
+      - invoiceNumber: numéro de facture
+      - invoiceDate: date de facturation
+      - dueDate: date d'échéance
+      - supplier: objet avec name, address, taxId
+      - items: tableau d'objets avec description, quantity, unitPrice, totalPrice
+      - subtotal: montant HT
+      - taxAmount: montant TVA
+      - totalAmount: montant TTC
 
-        const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
-        const prompt = createGenericPrompt();
+      Retournez uniquement le JSON sans commentaires.
+    `;
 
-        const result = await model.generateContent([prompt, imageData]);
+        const result = await model.generateContent([prompt, {
+            inlineData: {
+                data: imageBase64,
+                mimeType: 'image/jpeg',
+            },
+        }]);
+
         const response = await result.response;
         const text = response.text();
 
-        // Nettoyage du JSON
-        const jsonStr = text.replace(/```json|```/g, '').trim();
-        return JSON.parse(jsonStr);
+        const jsonStart = text.indexOf('{');
+        const jsonEnd = text.lastIndexOf('}') + 1;
+        const jsonString = text.slice(jsonStart, jsonEnd);
+
+        const extractedData = JSON.parse(jsonString);
+
+        return {
+            invoiceNumber: extractedData.invoiceNumber,
+            invoiceDate: extractedData.invoiceDate,
+            dueDate: extractedData.dueDate,
+            supplier: {
+                name: extractedData.supplier?.name || 'Inconnu',
+                address: extractedData.supplier?.address,
+                taxId: extractedData.supplier?.taxId,
+            },
+            items: extractedData.items?.map((item) => ({
+                description: item.description,
+                quantity: item.quantity || 1,
+                unitPrice: item.unitPrice || item.totalPrice,
+                totalPrice: item.totalPrice || item.unitPrice,
+            })) || [],
+            subtotal: extractedData.subtotal,
+            taxAmount: extractedData.taxAmount,
+            totalAmount: extractedData.totalAmount,
+            extractedData: extractedData,
+        };
     } catch (error) {
-        console.error('Error processing document:', error);
-        throw new Error('Failed to process document');
+        console.error('Erreur lors de l\'extraction des données:', error);
+        throw new Error('Échec de l\'extraction des données de la facture');
     }
 }
 
-function createGenericPrompt() {
-    return `
-  Extrayez TOUTES les informations disponibles de ce document (facture, devis, bon de commande ou autre) 
-  et retournez-les dans un format JSON structuré. 
-
-  Incluez absolument toutes les données que vous pouvez identifier, y compris mais sans vous limiter à :
-  - En-tête et métadonnées du document
-  - Informations sur l'émetteur et le destinataire
-  - Détails complets des produits/services
-  - Totaux, taxes et remises
-  - Conditions de paiement et livraison
-  - Mentions légales
-  - Toute autre information pertinente
-
-  Structurez les données de manière logique et conservez toutes les informations originales.
-  Retournez uniquement le JSON sans commentaires.
-  `;
-}
-
-module.exports = { processDocument };
+module.exports = { extractInvoiceData };

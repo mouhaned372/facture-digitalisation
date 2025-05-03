@@ -1,90 +1,64 @@
+const multer = require('multer');
 const Invoice = require('../models/Invoice');
-const { processDocument } = require('../services/geminiService');
+const { extractInvoiceData } = require('../services/geminiService');
 
-exports.uploadInvoice = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'No file uploaded' });
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+exports.uploadInvoice = [
+    upload.single('image'),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({ message: 'Aucun fichier téléchargé' });
+            }
+
+            const imageBase64 = req.file.buffer.toString('base64');
+            const extractedData = await extractInvoiceData(imageBase64);
+
+            // Validation des données requises
+            if (!extractedData.totalAmount) {
+                throw new Error('Le montant total est requis');
+            }
+
+            const invoice = new Invoice({
+                ...extractedData,
+                totalAmount: extractedData.totalAmount || 0, // Valeur par défaut
+                extractedData,
+            });
+
+            await invoice.save();
+
+            res.status(201).json(invoice);
+        } catch (error) {
+            console.error('Erreur lors du traitement de la facture:', error);
+            res.status(500).json({
+                message: 'Erreur lors du traitement de la facture',
+                error: error.message
+            });
         }
-
-        // Traitement du document avec Gemini
-        const extractedData = await processDocument(req.file);
-
-        // Création de la facture dans la base de données
-        const invoice = new Invoice({
-            userId: req.userId, // À partir du middleware d'authentification
-            fileName: req.file.originalname,
-            fileType: req.file.mimetype,
-            fileSize: req.file.size,
-            filePath: req.file.path,
-            extractedData,
-            type: extractedData.type || 'facture',
-            amount: extractedData.totalAmount || 0,
-            vendor: extractedData.vendor || 'Inconnu'
-        });
-
-        await invoice.save();
-
-        res.status(201).json({
-            message: 'Invoice processed successfully',
-            invoice
-        });
-    } catch (error) {
-        console.error('Error uploading invoice:', error);
-        res.status(500).json({ message: 'Error processing invoice', error: error.message });
-    }
-};
+    },
+];
 
 exports.getAllInvoices = async (req, res) => {
     try {
-        const { sortBy, type, startDate, endDate, minAmount, maxAmount } = req.query;
-        const userId = req.userId;
-
-        let query = { userId };
-
-        // Filtres
-        if (type) query.type = type;
-        if (startDate || endDate) {
-            query.date = {};
-            if (startDate) query.date.$gte = new Date(startDate);
-            if (endDate) query.date.$lte = new Date(endDate);
-        }
-        if (minAmount || maxAmount) {
-            query.amount = {};
-            if (minAmount) query.amount.$gte = Number(minAmount);
-            if (maxAmount) query.amount.$lte = Number(maxAmount);
-        }
-
-        // Tri
-        let sortOptions = { date: -1 }; // Par défaut: plus récent d'abord
-        if (sortBy === 'date_asc') sortOptions = { date: 1 };
-        if (sortBy === 'amount_desc') sortOptions = { amount: -1 };
-        if (sortBy === 'amount_asc') sortOptions = { amount: 1 };
-        if (sortBy === 'type') sortOptions = { type: 1 };
-
-        const invoices = await Invoice.find(query).sort(sortOptions);
-
+        const invoices = await Invoice.find().sort({ createdAt: -1 });
         res.json(invoices);
     } catch (error) {
-        console.error('Error fetching invoices:', error);
-        res.status(500).json({ message: 'Error fetching invoices', error: error.message });
+        console.error('Erreur lors de la récupération des factures:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des factures' });
     }
 };
 
 exports.getInvoiceById = async (req, res) => {
     try {
-        const invoice = await Invoice.findOne({
-            _id: req.params.id,
-            userId: req.userId
-        });
-
+        const invoice = await Invoice.findById(req.params.id);
         if (!invoice) {
-            return res.status(404).json({ message: 'Invoice not found' });
+            return res.status(404).json({ message: 'Facture non trouvée' });
         }
-
         res.json(invoice);
     } catch (error) {
-        console.error('Error fetching invoice:', error);
-        res.status(500).json({ message: 'Error fetching invoice', error: error.message });
+        console.error('Erreur lors de la récupération de la facture:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération de la facture' });
     }
 };

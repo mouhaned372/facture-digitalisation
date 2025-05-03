@@ -1,54 +1,181 @@
 const mongoose = require('mongoose');
 
-const invoiceSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'User'
-    },
-    fileName: {
+const InvoiceItemSchema = new mongoose.Schema({
+    description: {
         type: String,
-        required: true
+        required: [true, 'La description est obligatoire']
     },
-    fileType: {
-        type: String,
-        required: true
-    },
-    fileSize: {
+    quantity: {
         type: Number,
-        required: true
+        required: [true, 'La quantité est obligatoire'],
+        min: [1, 'La quantité doit être au moins 1']
     },
-    filePath: {
-        type: String,
-        required: true
+    unitPrice: {
+        type: Number,
+        required: [true, 'Le prix unitaire est obligatoire'],
+        min: [0, 'Le prix ne peut pas être négatif']
     },
-    extractedData: {
-        type: mongoose.Schema.Types.Mixed,
-        required: true
-    },
-    date: {
-        type: Date,
-        default: Date.now
-    },
-    type: {
-        type: String,
-        enum: ['facture', 'devis', 'bon de commande', 'autre'],
-        default: 'facture'
-    },
-    amount: {
-        type: Number
-    },
-    vendor: {
-        type: String
+    totalPrice: {
+        type: Number,
+        required: [true, 'Le prix total est obligatoire'],
+        min: [0, 'Le prix ne peut pas être négatif']
     }
-}, {
-    timestamps: true
+}, { _id: false });
+
+const SupplierSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: [true, 'Le nom du fournisseur est obligatoire'],
+        trim: true
+    },
+    address: {
+        type: String,
+        trim: true
+    },
+    taxId: {
+        type: String,
+        trim: true
+    },
+    email: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        match: [/\S+@\S+\.\S+/, 'Email invalide']
+    },
+    phone: {
+        type: String,
+        trim: true
+    }
+}, { _id: false });
+
+const InvoiceSchema = new mongoose.Schema(
+    {
+        invoiceNumber: {
+            type: String,
+            unique: true,
+            trim: true
+        },
+        invoiceDate: {
+            type: Date,
+            default: Date.now
+        },
+        dueDate: Date,
+        supplier: {
+            type: SupplierSchema,
+            required: [true, 'Les informations du fournisseur sont obligatoires']
+        },
+        items: {
+            type: [InvoiceItemSchema],
+            required: [true, 'Au moins un article est obligatoire'],
+            validate: {
+                validator: function(v) {
+                    return v.length > 0;
+                },
+                message: 'Au moins un article est obligatoire'
+            }
+        },
+        subtotal: {
+            type: Number,
+            min: 0,
+            required: true
+        },
+        taxAmount: {
+            type: Number,
+            min: 0,
+            default: 0
+        },
+        totalAmount: {
+            type: Number,
+            min: 0,
+            required: [true, 'Le montant total est obligatoire']
+        },
+        paymentStatus: {
+            type: String,
+            enum: ['pending', 'paid', 'cancelled'],
+            default: 'pending'
+        },
+        extractedData: {
+            type: mongoose.Schema.Types.Mixed,
+            required: true
+        },
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    },
+    {
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    }
+);
+
+// Calcul automatique du sous-total et total avant sauvegarde
+InvoiceSchema.pre('save', function(next) {
+    if (this.isModified('items')) {
+        this.subtotal = this.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        this.totalAmount = this.subtotal + (this.taxAmount || 0);
+    }
+    next();
 });
 
 // Index pour les recherches fréquentes
-invoiceSchema.index({ userId: 1, date: -1 });
-invoiceSchema.index({ userId: 1, type: 1 });
-invoiceSchema.index({ userId: 1, amount: 1 });
-invoiceSchema.index({ userId: 1, vendor: 1 });
+InvoiceSchema.index({ invoiceNumber: 1 });
+InvoiceSchema.index({ 'supplier.name': 1 });
+InvoiceSchema.index({ totalAmount: 1 });
+InvoiceSchema.index({ paymentStatus: 1 });
+InvoiceSchema.index({ createdAt: -1 });
 
-module.exports = mongoose.model('Invoice', invoiceSchema);
+// Méthode statique pour trouver les factures par fournisseur
+InvoiceSchema.statics.findBySupplier = function(supplierName) {
+    return this.find({ 'supplier.name': new RegExp(supplierName, 'i') });
+};
+
+// Méthode d'instance pour marquer comme payée
+InvoiceSchema.methods.markAsPaid = function() {
+    this.paymentStatus = 'paid';
+    return this.save();
+};
+
+const Invoice = mongoose.model('Invoice', InvoiceSchema);
+
+module.exports = Invoice;
+
+
+
+
+
+// const mongoose = require('mongoose');
+//
+// const InvoiceItemSchema = new mongoose.Schema({
+//     description: { type: String, required: true },
+//     quantity: { type: Number, required: true },
+//     unitPrice: { type: Number, required: true },
+//     totalPrice: { type: Number, required: true },
+// });
+//
+// const SupplierSchema = new mongoose.Schema({
+//     name: { type: String, required: true },
+//     address: { type: String },
+//     taxId: { type: String },
+//     email: { type: String },
+//     phone: { type: String },
+// });
+//
+// const InvoiceSchema = new mongoose.Schema(
+//     {
+//         invoiceNumber: { type: String },
+//         invoiceDate: { type: String },
+//         dueDate: { type: String },
+//         supplier: { type: SupplierSchema, required: true },
+//         items: { type: [InvoiceItemSchema], required: true },
+//         subtotal: { type: Number },
+//         taxAmount: { type: Number },
+//         totalAmount: { type: Number, required: true },
+//         paymentStatus: { type: String, default: 'pending' },
+//         extractedData: { type: mongoose.Schema.Types.Mixed, required: true },
+//     },
+//     { timestamps: true }
+// );
+//
+// module.exports = mongoose.model('Invoice', InvoiceSchema);

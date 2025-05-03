@@ -1,31 +1,28 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 
 export default function HomeScreen() {
-    const router = useRouter();
-
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Facture Scanner</Text>
 
-            <TouchableOpacity
-                style={styles.scanButton}
-                onPress={() => router.push('/camera')}
-            >
-                <Ionicons name="camera" size={50} color="white" />
-                <Text style={styles.scanButtonText}>Scanner une facture</Text>
-            </TouchableOpacity>
+            <Link href="/(tabs)/scan" asChild>
+                <TouchableOpacity style={styles.scanButton}>
+                    <Ionicons name="camera" size={50} color="white" />
+                    <Text style={styles.scanButtonText}>Scanner une facture</Text>
+                </TouchableOpacity>
+            </Link>
 
-            <TouchableOpacity
-                style={styles.invoicesButton}
-                onPress={() => router.push('/invoices')}
-            >
-                <Text style={styles.invoicesButtonText}>Voir mes factures</Text>
-            </TouchableOpacity>
+            <Link href="/(tabs)/history" asChild>
+                <TouchableOpacity style={styles.invoicesButton}>
+                    <Text style={styles.invoicesButtonText}>Voir mes factures</Text>
+                </TouchableOpacity>
+            </Link>
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {
