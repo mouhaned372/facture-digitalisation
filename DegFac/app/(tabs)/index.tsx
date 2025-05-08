@@ -1,64 +1,160 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { theme } from '@/constants/theme';
+import StatsCard from '@/components/StatsCard';
 
 export default function HomeScreen() {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Facture Scanner</Text>
+            <View style={styles.header}>
+                <Text style={styles.title}>Bienvenue</Text>
+                <Text style={styles.subtitle}>Gérez vos factures en un clin d'œil</Text>
+            </View>
 
-            <Link href="/(tabs)/scan" asChild>
-                <TouchableOpacity style={styles.scanButton}>
-                    <Ionicons name="camera" size={50} color="white" />
-                    <Text style={styles.scanButtonText}>Scanner une facture</Text>
-                </TouchableOpacity>
-            </Link>
+            <View style={styles.statsRow}>
+                <StatsCard
+                    icon="receipt"
+                    value="24"
+                    label="Factures ce mois"
+                    color="#6C63FF"
+                />
+                <StatsCard
+                    icon="euro-symbol"
+                    value="1,245€"
+                    label="Dépenses totales"
+                    color="#FF6584"
+                />
+            </View>
 
-            <Link href="/(tabs)/history" asChild>
-                <TouchableOpacity style={styles.invoicesButton}>
-                    <Text style={styles.invoicesButtonText}>Voir mes factures</Text>
-                </TouchableOpacity>
-            </Link>
+            <View style={styles.actionsContainer}>
+                <Link href="/(tabs)/scan" asChild>
+                    <TouchableOpacity style={styles.actionCard}>
+                        <LinearGradient
+                            colors={['#6C63FF', '#8A85FF']}
+                            style={styles.gradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <FontAwesome5 name="camera" size={24} color="white" />
+                            <Text style={styles.actionText}>Scanner</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </Link>
+
+                <Link href="/gallery-upload" asChild>
+                    <TouchableOpacity style={styles.actionCard}>
+                        <LinearGradient
+                            colors={['#FF6584', '#FF8E9E']}
+                            style={styles.gradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <Ionicons name="image" size={24} color="white" />
+                            <Text style={styles.actionText}>Importer</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </Link>
+            </View>
+
+            <View style={styles.quickActions}>
+                <Text style={styles.sectionTitle}>Actions rapides</Text>
+
+                <View style={styles.quickActionsRow}>
+                    <Link href="/(tabs)/history" asChild>
+                        <TouchableOpacity style={styles.quickAction}>
+                            <MaterialIcons name="receipt" size={24} color={theme.colors.primary} />
+                            <Text style={styles.quickActionText}>Voir factures</Text>
+                        </TouchableOpacity>
+                    </Link>
+
+                    <Link href="/(tabs)/reports" asChild>
+                        <TouchableOpacity style={styles.quickAction}>
+                            <Ionicons name="stats-chart" size={24} color={theme.colors.primary} />
+                            <Text style={styles.quickActionText}>Rapports</Text>
+                        </TouchableOpacity>
+                    </Link>
+                </View>
+            </View>
         </View>
     );
 }
 
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        backgroundColor: '#f5f5f5'
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+    },
+    header: {
+        marginBottom: theme.spacing.xl,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 40
+        ...theme.text.h1,
+        color: theme.colors.text,
+        marginBottom: theme.spacing.xs,
     },
-    scanButton: {
-        backgroundColor: '#4285F4',
-        padding: 20,
-        borderRadius: 10,
+    subtitle: {
+        ...theme.text.body,
+        color: theme.colors.textSecondary,
+    },
+    statsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: theme.spacing.xl,
+    },
+    actionsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: theme.spacing.xl,
+    },
+    actionCard: {
+        width: '48%',
+        borderRadius: theme.radius.lg,
+        overflow: 'hidden',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+    },
+    gradient: {
+        padding: theme.spacing.lg,
         alignItems: 'center',
-        marginBottom: 20,
-        width: '80%'
+        justifyContent: 'center',
+        height: 120,
     },
-    scanButtonText: {
+    actionText: {
+        marginTop: theme.spacing.sm,
         color: 'white',
-        fontSize: 18,
-        marginTop: 10
+        ...theme.text.h3,
     },
-    invoicesButton: {
-        backgroundColor: '#34A853',
-        padding: 15,
-        borderRadius: 10,
-        width: '80%',
-        alignItems: 'center'
+    quickActions: {
+        marginBottom: theme.spacing.xl,
     },
-    invoicesButtonText: {
-        color: 'white',
-        fontSize: 16
-    }
+    sectionTitle: {
+        ...theme.text.h3,
+        color: theme.colors.text,
+        marginBottom: theme.spacing.md,
+    },
+    quickActionsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    quickAction: {
+        width: '48%',
+        backgroundColor: theme.colors.card,
+        padding: theme.spacing.md,
+        borderRadius: theme.radius.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        elevation: 1,
+    },
+    quickActionText: {
+        ...theme.text.body,
+        color: theme.colors.text,
+        marginLeft: theme.spacing.sm,
+    },
 });

@@ -1,29 +1,26 @@
 {
   "documentType": "Facture",
-  "header": {
+  "metadata": {
     "factureNumber": "25-011348",
-    "date": "1, avril 2025",
-    "echeance": "1, avril 2025",
-    "codeTVAClient": "BAM000"
+    "date": "1 avril 2025",
+    "echeance": "1, avril 2025"
   },
   "issuer": {
     "name": "STEQ",
-    "address": null,
-    "phone": "71 115.500",
-    "fax": "71 809.402",
+    "address": "Société Tunisienne d Equipement: S.A. au Capital de 7.000.000 Dinars - 8, Rue 8601 - Zone Industrielle Charquia I - BP 746 1080 Tunis Cedex",
+    "telephone": "71 115 500",
+    "fax": "71 809 402",
     "email": "steq@planet.tn",
-    "legalInformation": "Société Tunisienne d Equipement: S.A. au Capital de 7.000.000 Dinars - 8, Rue 8601 - Zone Industrielle Charguia I - BP 746 1080 Tunis Cedex R.C.: B110931 1996Tunis - code TVA: 02404B/A/M/000"
+    "rc": "B110931 1996Tunis",
+    "codeTVA": "02404B/A/M/000"
   },
-  "recipient": {
+  "client": {
     "codeClient": "1.0245",
     "name": "STE COMPTOIR LAMINE ET FILS",
-    "address": "000, ROUTE DE TUNIS Z2 HAMM\nHAMMAM SOUSSE, 4011"
+    "address": "000, ROUTE DE TUNIS Z2 HAMM\nHAMMAM SOUSSE, 4011",
+    "codeTVA": "BAM000"
   },
-  "paymentDetails": {
-    "modeDePaiement": null,
-    "domiciliation": null
-  },
-  "items": [
+  "details": [
     {
       "numeroBL": "B25-043076",
       "date": "25/02/2025",
@@ -158,14 +155,14 @@
       "tva": "7,695"
     }
   ],
-  "summary": {
+  "total": {
     "tauxTVA": "19",
     "base": "2 133,657",
     "montantTVA": "405,395",
     "netHT": "2 133,657",
     "totalTVA": "405,395",
     "timbre": "1,000",
-    "totalTTC": "2 540.052"
-  },
-  "amountInWords": "Arrêter la présente Facture à la somme de\nDEUX MILLE CINQ CENT QUARANTE DINARS CINQUANTE DEUX\nMILLIMES"
+    "totalTTC": "2 540.052",
+    "arretter": "Arrêter la présente Facture à la somme de DEUX MILLE CINQ CENT QUARANTE DINARS CINQUANTE DEUX MILLIMES"
+  }
 }

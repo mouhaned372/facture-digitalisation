@@ -1,90 +1,117 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Invoice } from '@/types/invoice';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { theme } from '@/constants/theme';
 
 interface InvoiceItemProps {
-    invoice: Invoice;
+    invoice: {
+        _id: string;
+        invoiceNumber: string;
+        invoiceDate: string;
+        paymentStatus: string;
+        totalAmount: number;
+        supplier: {
+            name: string;
+        };
+    };
     onPress: () => void;
 }
 
-const InvoiceItem: React.FC<InvoiceItemProps> = ({ invoice, onPress }) => {
-    // Validation robuste des données
-    if (!invoice || typeof invoice.totalAmount === 'undefined') {
-        return (
-            <View style={styles.container}>
-                <Text style={styles.errorText}>Données de facture incomplètes</Text>
-            </View>
-        );
-    }
+export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+        });
+    };
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('fr-FR', {
+            style: 'currency',
+            currency: 'EUR',
+        }).format(amount);
+    };
 
     return (
-        <TouchableOpacity onPress={onPress} style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.invoiceNumber}>
-                    {invoice.invoiceNumber || 'N° Non disponible'}
-                </Text>
-                <Text style={styles.totalAmount}>
-                    {invoice.totalAmount?.toFixed(2)} €
-                </Text>
-            </View>
+        <TouchableOpacity onPress={onPress}>
+            <View style={styles.container}>
+                <View style={styles.leftContainer}>
+                    <View style={[
+                        styles.statusIndicator,
+                        invoice.paymentStatus === 'paid'
+                            ? styles.paidStatus
+                            : styles.pendingStatus
+                    ]} />
 
-            <Text style={styles.supplier}>
-                {invoice.supplier?.name || 'Fournisseur inconnu'}
-            </Text>
+                    <View>
+                        <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
+                        <Text style={styles.supplier}>{invoice.supplier.name}</Text>
+                    </View>
+                </View>
 
-            <View style={styles.details}>
-                <Text>{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'Date inconnue'}</Text>
-                <Text style={styles[invoice.paymentStatus || 'pending']}>
-                    {invoice.paymentStatus === 'paid' ? 'Payée' : 'En attente'}
-                </Text>
+                <View style={styles.rightContainer}>
+                    <Text style={styles.amount}>{formatCurrency(invoice.totalAmount)}</Text>
+                    <Text style={styles.date}>{formatDate(invoice.invoiceDate)}</Text>
+                </View>
+
+                <MaterialIcons
+                    name="chevron-right"
+                    size={24}
+                    color={theme.colors.textSecondary}
+                />
             </View>
         </TouchableOpacity>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#fff',
-        padding: 16,
-        marginVertical: 8,
-        borderRadius: 8,
-        elevation: 2,
-    },
-    header: {
+        backgroundColor: theme.colors.card,
+        padding: theme.spacing.lg,
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 8,
+    },
+    leftContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    statusIndicator: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginRight: theme.spacing.md,
+    },
+    paidStatus: {
+        backgroundColor: theme.colors.success,
+    },
+    pendingStatus: {
+        backgroundColor: theme.colors.warning,
     },
     invoiceNumber: {
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    totalAmount: {
-        fontWeight: 'bold',
-        color: '#2e86de',
-        fontSize: 16,
+        ...theme.text.body,
+        color: theme.colors.text,
+        fontWeight: '600',
+        marginBottom: theme.spacing.xs,
     },
     supplier: {
-        marginBottom: 8,
-        color: '#555',
+        ...theme.text.caption,
+        color: theme.colors.textSecondary,
     },
-    details: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    rightContainer: {
+        alignItems: 'flex-end',
+        marginRight: theme.spacing.md,
     },
-    pending: {
-        color: '#e67e22',
+    amount: {
+        ...theme.text.body,
+        color: theme.colors.text,
+        fontWeight: '600',
+        marginBottom: theme.spacing.xs,
     },
-    paid: {
-        color: '#27ae60',
-    },
-    cancelled: {
-        color: '#e74c3c',
-    },
-    errorText: {
-        color: 'red',
-        fontStyle: 'italic',
+    date: {
+        ...theme.text.caption,
+        color: theme.colors.textSecondary,
     },
 });
-
-export default InvoiceItem;
