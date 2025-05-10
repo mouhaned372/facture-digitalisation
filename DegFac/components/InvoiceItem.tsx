@@ -2,34 +2,55 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 
+interface Supplier {
+    name?: string;
+}
+
+interface Invoice {
+    _id: string;
+    invoiceNumber?: string;
+    invoiceDate?: string;
+    paymentStatus?: string;
+    totalAmount?: number;
+    supplier?: Supplier;
+}
+
 interface InvoiceItemProps {
-    invoice: {
-        _id: string;
-        invoiceNumber: string;
-        invoiceDate: string;
-        paymentStatus: string;
-        totalAmount: number;
-        supplier: {
-            name: string;
-        };
-    };
+    invoice: Invoice | null;
     onPress: () => void;
 }
 
 export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        });
+    // Vérification de l'existence de la facture
+    if (!invoice) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.errorText}>Facture invalide</Text>
+            </View>
+        );
+    }
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return 'Date inconnue';
+
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+            });
+        } catch {
+            return 'Date invalide';
+        }
     };
 
-    const formatCurrency = (amount: number) => {
+    const formatNumber = (amount?: number) => {
+        if (amount === undefined || amount === null) return 'N/A';
+
         return new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'EUR',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
         }).format(amount);
     };
 
@@ -45,14 +66,22 @@ export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {
                     ]} />
 
                     <View>
-                        <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
-                        <Text style={styles.supplier}>{invoice.supplier.name}</Text>
+                        <Text style={styles.invoiceNumber}>
+                            {invoice.invoiceNumber || 'N° Inconnu'}
+                        </Text>
+                        <Text style={styles.supplier}>
+                            {invoice.supplier?.name || 'Fournisseur non spécifié'}
+                        </Text>
                     </View>
                 </View>
 
                 <View style={styles.rightContainer}>
-                    <Text style={styles.amount}>{formatCurrency(invoice.totalAmount)}</Text>
-                    <Text style={styles.date}>{formatDate(invoice.invoiceDate)}</Text>
+                    <Text style={styles.amount}>
+                        {formatNumber(invoice.totalAmount)}
+                    </Text>
+                    <Text style={styles.date}>
+                        {formatDate(invoice.invoiceDate)}
+                    </Text>
                 </View>
 
                 <MaterialIcons
@@ -113,5 +142,10 @@ const styles = StyleSheet.create({
     date: {
         ...theme.text.caption,
         color: theme.colors.textSecondary,
+    },
+    errorText: {
+        ...theme.text.body,
+        color: theme.colors.danger,
+        textAlign: 'center',
     },
 });

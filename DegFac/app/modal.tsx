@@ -21,9 +21,10 @@ export default function InvoiceModal() {
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'EUR',
-        }).format(amount);
+            style: 'decimal',
+            minimumFractionDigits: 3,
+            maximumFractionDigits: 3
+        }).format(amount) + ' DT';
     };
 
     const handleShare = async () => {
@@ -104,8 +105,8 @@ export default function InvoiceModal() {
                 {/* Fournisseur */}
                 {renderSection('Fournisseur', (
                     <>
-                        <Text style={styles.supplierName}>{invoiceData.supplier.name}</Text>
-                        {invoiceData.supplier.address && (
+                        <Text style={styles.supplierName}>{invoiceData.supplier?.name ?? 'Nom non spécifié'}</Text>
+                        {invoiceData.supplier?.address && (
                             <View style={styles.addressContainer}>
                                 <MaterialIcons name="location-on" size={16} color={theme.colors.textSecondary} />
                                 <Text style={styles.supplierAddress}>
@@ -115,7 +116,7 @@ export default function InvoiceModal() {
                                 </Text>
                             </View>
                         )}
-                        {invoiceData.supplier.taxId && (
+                        {invoiceData.supplier?.taxId && (
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>SIRET:</Text>
                                 <Text style={styles.infoValue}>{invoiceData.supplier.taxId}</Text>
@@ -147,7 +148,7 @@ export default function InvoiceModal() {
                 ), 'euro-symbol')}
 
                 {/* Articles */}
-                {renderSection(`Articles (${invoiceData.items.length})`, (
+                {renderSection(`Articles (${invoiceData.items?.length ?? 0})`, (
                     <View style={styles.itemsContainer}>
                         <View style={styles.itemsHeader}>
                             <Text style={[styles.itemHeaderText, { flex: 3 }]}>Description</Text>
@@ -155,7 +156,7 @@ export default function InvoiceModal() {
                             <Text style={styles.itemHeaderText}>Prix U.</Text>
                             <Text style={styles.itemHeaderText}>Total</Text>
                         </View>
-                        {invoiceData.items.map((item, index) => (
+                        {invoiceData.items?.map((item, index) => (
                             <View key={index} style={styles.itemRow}>
                                 <Text style={styles.itemDescription} numberOfLines={2}>{item.description}</Text>
                                 <Text style={styles.itemQuantity}>{item.quantity || 1}</Text>
@@ -402,335 +403,3 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
 });
-
-
-
-
-//
-// import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share } from 'react-native';
-// import { useLocalSearchParams, useRouter } from 'expo-router';
-// import { Invoice } from '@/types/invoice';
-// import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-//
-// export default function InvoiceModal() {
-//     const { invoice } = useLocalSearchParams();
-//     const router = useRouter();
-//     const invoiceData: Invoice = JSON.parse(invoice as string);
-//
-//     const formatDate = (dateString: string) => {
-//         const date = new Date(dateString);
-//         return date.toLocaleDateString('fr-FR', {
-//             day: '2-digit',
-//             month: 'long',
-//             year: 'numeric',
-//         });
-//     };
-//
-//     const formatCurrency = (amount: number) => {
-//         return new Intl.NumberFormat('fr-FR', {
-//             style: 'currency',
-//             currency: 'EUR',
-//             minimumFractionDigits: 2,
-//             maximumFractionDigits: 2
-//         }).format(amount);
-//     };
-//
-//     const handleShare = async () => {
-//         try {
-//             await Share.share({
-//                 message: `Facture ${invoiceData.invoiceNumber} - ${formatCurrency(invoiceData.totalAmount)}`,
-//                 url: 'https://invoicescanpro.com',
-//                 title: `Facture ${invoiceData.invoiceNumber}`,
-//             });
-//         } catch (error) {
-//             console.error(error);
-//         }
-//     };
-//
-//     const renderSection = (title: string, content: React.ReactNode) => (
-//         <View style={styles.section}>
-//             <Text style={styles.sectionTitle}>{title}</Text>
-//             {content}
-//         </View>
-//     );
-//
-//     return (
-//         <View style={styles.container}>
-//             <ScrollView contentContainerStyle={styles.scrollContainer}>
-//                 <View style={styles.header}>
-//                     <Text style={styles.title}>Détails de la Facture</Text>
-//                     <Text style={styles.invoiceNumber}>{invoiceData.invoiceNumber}</Text>
-//                 </View>
-//
-//                 {/* Informations Générales */}
-//                 {renderSection('Informations Générales', (
-//                     <>
-//                         <View style={styles.infoRow}>
-//                             <Text style={styles.infoLabel}>Date:</Text>
-//                             <Text>{formatDate(invoiceData.invoiceDate || invoiceData.createdAt)}</Text>
-//                         </View>
-//                         <View style={styles.infoRow}>
-//                             <Text style={styles.infoLabel}>Statut:</Text>
-//                             <Text style={[
-//                                 styles.statusText,
-//                                 invoiceData.paymentStatus === 'paid' ? styles.paidStatus : styles.pendingStatus
-//                             ]}>
-//                                 {invoiceData.paymentStatus === 'paid' ? 'Payée' : 'En attente'}
-//                             </Text>
-//                         </View>
-//                     </>
-//                 ))}
-//
-//                 {/* Fournisseur */}
-//                 {renderSection('Fournisseur', (
-//                     <>
-//                         <Text style={styles.supplierName}>{invoiceData.supplier.name}</Text>
-//                         {invoiceData.supplier.address && (
-//                             <Text style={styles.supplierAddress}>
-//                                 {invoiceData.supplier.address.split('\n').map((line, i) => (
-//                                     <Text key={i}>{line}{i !== invoiceData.supplier.address.split('\n').length - 1 ? '\n' : ''}</Text>
-//                                 ))}
-//                             </Text>
-//                         )}
-//                         {invoiceData.supplier.taxId && (
-//                             <View style={styles.infoRow}>
-//                                 <Text style={styles.infoLabel}>SIRET:</Text>
-//                                 <Text>{invoiceData.supplier.taxId}</Text>
-//                             </View>
-//                         )}
-//                     </>
-//                 ))}
-//
-//                 {/* Montants */}
-//                 {renderSection('Montants', (
-//                     <>
-//                         <View style={styles.amountRow}>
-//                             <Text>Sous-total:</Text>
-//                             <Text>{formatCurrency(invoiceData.subtotal)}</Text>
-//                         </View>
-//                         {invoiceData.taxAmount > 0 && (
-//                             <View style={styles.amountRow}>
-//                                 <Text>TVA ({Math.round(invoiceData.taxAmount / invoiceData.subtotal * 100)}%):</Text>
-//                                 <Text>{formatCurrency(invoiceData.taxAmount)}</Text>
-//                             </View>
-//                         )}
-//                         <View style={[styles.amountRow, styles.totalAmountRow]}>
-//                             <Text style={styles.totalLabel}>Total:</Text>
-//                             <Text style={styles.totalAmount}>{formatCurrency(invoiceData.totalAmount)}</Text>
-//                         </View>
-//                     </>
-//                 ))}
-//
-//                 {/* Articles */}
-//                 {renderSection(`Articles (${invoiceData.items.length})`, (
-//                     <View style={styles.itemsContainer}>
-//                         <View style={styles.itemsHeader}>
-//                             <Text style={[styles.itemHeaderText, { flex: 3 }]}>Description</Text>
-//                             <Text style={styles.itemHeaderText}>Qté</Text>
-//                             <Text style={styles.itemHeaderText}>Prix U.</Text>
-//                             <Text style={styles.itemHeaderText}>Total</Text>
-//                         </View>
-//                         {invoiceData.items.map((item, index) => (
-//                             <View key={index} style={styles.itemRow}>
-//                                 <Text style={styles.itemDescription}>{item.description}</Text>
-//                                 <Text>{item.quantity || 1}</Text>
-//                                 <Text>{formatCurrency(item.unitPrice)}</Text>
-//                                 <Text>{formatCurrency(item.totalPrice)}</Text>
-//                             </View>
-//                         ))}
-//                     </View>
-//                 ))}
-//
-//                 {/* Actions */}
-//                 <View style={styles.actionsContainer}>
-//                     <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-//                         <MaterialIcons name="share" size={20} color="#007AFF" />
-//                         <Text style={styles.actionButtonText}>Partager</Text>
-//                     </TouchableOpacity>
-//                     <TouchableOpacity style={styles.actionButton}>
-//                         <MaterialIcons name="print" size={20} color="#007AFF" />
-//                         <Text style={styles.actionButtonText}>Imprimer</Text>
-//                     </TouchableOpacity>
-//                     <TouchableOpacity style={styles.actionButton}>
-//                         <MaterialIcons name="attach-money" size={20} color="#007AFF" />
-//                         <Text style={styles.actionButtonText}>Payer</Text>
-//                     </TouchableOpacity>
-//                 </View>
-//
-//                 {/* Metadata */}
-//                 {renderSection('Métadonnées', (
-//                     <>
-//                         <View style={styles.infoRow}>
-//                             <Text style={styles.infoLabel}>ID:</Text>
-//                             <Text>{invoiceData._id}</Text>
-//                         </View>
-//                         <View style={styles.infoRow}>
-//                             <Text style={styles.infoLabel}>Créée le:</Text>
-//                             <Text>{formatDate(invoiceData.createdAt)}</Text>
-//                         </View>
-//                     </>
-//                 ))}
-//
-//                 <TouchableOpacity
-//                     style={styles.closeButton}
-//                     onPress={() => router.back()}
-//                 >
-//                     <Ionicons name="close" size={20} color="white" />
-//                     <Text style={styles.closeButtonText}>Fermer</Text>
-//                 </TouchableOpacity>
-//             </ScrollView>
-//         </View>
-//     );
-// }
-//
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//         padding: 16,
-//         backgroundColor: '#fff',
-//     },
-//     scrollContainer: {
-//         paddingBottom: 30,
-//     },
-//     header: {
-//         marginBottom: 24,
-//         alignItems: 'center',
-//     },
-//     title: {
-//         fontSize: 22,
-//         fontWeight: 'bold',
-//         color: '#333',
-//     },
-//     invoiceNumber: {
-//         fontSize: 16,
-//         color: '#666',
-//         marginTop: 4,
-//     },
-//     section: {
-//         marginBottom: 24,
-//         padding: 16,
-//         backgroundColor: '#f8f9fa',
-//         borderRadius: 8,
-//         borderWidth: 1,
-//         borderColor: '#e9ecef',
-//     },
-//     sectionTitle: {
-//         fontSize: 18,
-//         fontWeight: '600',
-//         marginBottom: 12,
-//         color: '#333',
-//         borderBottomWidth: 1,
-//         borderBottomColor: '#dee2e6',
-//         paddingBottom: 8,
-//     },
-//     infoRow: {
-//         flexDirection: 'row',
-//         justifyContent: 'space-between',
-//         marginBottom: 8,
-//     },
-//     infoLabel: {
-//         fontWeight: '500',
-//         color: '#495057',
-//     },
-//     supplierName: {
-//         fontSize: 16,
-//         fontWeight: '600',
-//         marginBottom: 4,
-//     },
-//     supplierAddress: {
-//         color: '#6c757d',
-//         marginBottom: 8,
-//         lineHeight: 20,
-//     },
-//     statusText: {
-//         fontWeight: 'bold',
-//         textTransform: 'capitalize',
-//     },
-//     paidStatus: {
-//         color: '#28a745',
-//     },
-//     pendingStatus: {
-//         color: '#dc3545',
-//     },
-//     amountRow: {
-//         flexDirection: 'row',
-//         justifyContent: 'space-between',
-//         marginBottom: 6,
-//     },
-//     totalAmountRow: {
-//         marginTop: 8,
-//         paddingTop: 8,
-//         borderTopWidth: 1,
-//         borderTopColor: '#dee2e6',
-//     },
-//     totalLabel: {
-//         fontWeight: '600',
-//     },
-//     totalAmount: {
-//         fontWeight: 'bold',
-//         fontSize: 16,
-//     },
-//     itemsContainer: {
-//         marginTop: 8,
-//     },
-//     itemsHeader: {
-//         flexDirection: 'row',
-//         justifyContent: 'space-between',
-//         marginBottom: 8,
-//         paddingBottom: 8,
-//         borderBottomWidth: 1,
-//         borderBottomColor: '#dee2e6',
-//     },
-//     itemHeaderText: {
-//         fontWeight: '600',
-//         textAlign: 'center',
-//         flex: 1,
-//     },
-//     itemRow: {
-//         flexDirection: 'row',
-//         justifyContent: 'space-between',
-//         marginBottom: 8,
-//         paddingVertical: 8,
-//         borderBottomWidth: 1,
-//         borderBottomColor: '#f1f3f5',
-//     },
-//     itemDescription: {
-//         flex: 3,
-//         paddingRight: 8,
-//     },
-//     actionsContainer: {
-//         flexDirection: 'row',
-//         justifyContent: 'space-between',
-//         marginTop: 16,
-//         marginBottom: 24,
-//     },
-//     actionButton: {
-//         flexDirection: 'row',
-//         alignItems: 'center',
-//         padding: 12,
-//         backgroundColor: '#fff',
-//         borderRadius: 8,
-//         borderWidth: 1,
-//         borderColor: '#e9ecef',
-//     },
-//     actionButtonText: {
-//         color: '#007AFF',
-//         fontWeight: '500',
-//         marginLeft: 8,
-//     },
-//     closeButton: {
-//         marginTop: 16,
-//         padding: 12,
-//         backgroundColor: '#007AFF',
-//         borderRadius: 8,
-//         flexDirection: 'row',
-//         justifyContent: 'center',
-//         alignItems: 'center',
-//     },
-//     closeButtonText: {
-//         color: '#fff',
-//         fontSize: 16,
-//         fontWeight: '600',
-//         marginLeft: 8,
-//     },
-// });

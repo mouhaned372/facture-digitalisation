@@ -56,13 +56,24 @@ const InvoiceSchema = new mongoose.Schema(
             trim: true
         },
         invoiceDate: {
-            type: Date,
-            default: Date.now
+            type: String,  // Changé de Date à String
+            required: true,
+            validate: {
+                validator: function(v) {
+                    return /^\d{2}\/\d{2}\/\d{4}$/.test(v);
+                },
+                message: props => `${props.value} n'est pas une date valide (format JJ/MM/AAAA)`
+            }
         },
-        dueDate: Date,
-        supplier: {
-            type: SupplierSchema,
-            required: [true, 'Les informations du fournisseur sont obligatoires']
+        dueDate: {
+            type: String,  // Changé de Date à String
+            validate: {
+                validator: function(v) {
+                    if (!v) return true;  // Optionnel
+                    return /^\d{2}\/\d{2}\/\d{4}$/.test(v);
+                },
+                message: props => `${props.value} n'est pas une date valide (format JJ/MM/AAAA)`
+            }
         },
         items: {
             type: [InvoiceItemSchema],

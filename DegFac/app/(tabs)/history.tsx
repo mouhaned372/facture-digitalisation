@@ -71,8 +71,7 @@ export default function HistoryPage() {
     return (
         <View style={styles.container}>
             <FlatList
-                data={invoices}
-                keyExtractor={(item) => item._id}
+                data={invoices.filter(inv => inv && inv._id)}
                 renderItem={({ item }) => (
                     <InvoiceItem
                         invoice={item}

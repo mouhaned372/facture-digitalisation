@@ -33,9 +33,8 @@ export default function GalleryUploadPage() {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [30, 40],
-                quality: 0.9,
+                allowsEditing: false,
+                quality: 1,
             });
 
             if (!result.canceled && result.assets[0].uri) {
