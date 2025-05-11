@@ -10,15 +10,55 @@ export default function InvoiceModal() {
     const router = useRouter();
     const invoiceData: Invoice = JSON.parse(invoice as string);
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
+    // Fonction pour obtenir les données du fournisseur (priorité à supplier racine, sinon extractedData)
+    const getSupplier = () => {
+        return invoiceData.supplier || invoiceData.extractedData?.supplier || {
+            name: 'Fournisseur inconnu',
+            address: null,
+            taxId: null
+        };
+    };
+
+    // Fonction pour obtenir les articles avec des valeurs par défaut
+    const getItems = () => {
+        return (invoiceData.items || invoiceData.extractedData?.items || []).map(item => ({
+            description: item.description || 'Article non spécifié',
+            quantity: item.quantity ?? 1,
+            unitPrice: item.unitPrice ?? 0,
+            totalPrice: item.totalPrice ?? (item.unitPrice ?? 0) * (item.quantity ?? 1)
+        }));
+    };
+    const formatDate = (dateInput: string | { $date: { $numberLong: string } } | undefined) => {
+        // Si la date est undefined ou null
+        if (!dateInput) return 'Date inconnue';
+
+        let date: Date;
+
+        // Si la date est dans le format MongoDB { $date: { $numberLong: "..." } }
+        if (typeof dateInput === 'object' && dateInput.$date?.$numberLong) {
+            date = new Date(parseInt(dateInput.$date.$numberLong));
+        }
+        // Si c'est déjà une string au format JJ/MM/AAAA
+        else if (typeof dateInput === 'string' && dateInput.includes('/')) {
+            const [day, month, year] = dateInput.split('/');
+            date = new Date(`${year}-${month}-${day}`);
+        }
+        // Sinon, essayer de parser comme date ISO
+        else {
+            date = new Date(dateInput);
+        }
+
+        // Vérifier si la date est valide
+        if (isNaN(date.getTime())) {
+            return 'Date inconnue';
+        }
+
         return date.toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: 'long',
             year: 'numeric',
         });
     };
-
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('fr-FR', {
             style: 'decimal',
@@ -38,6 +78,14 @@ export default function InvoiceModal() {
             console.error(error);
         }
     };
+    const supplier = getSupplier();
+    const items = getItems();
+    const subtotal = invoiceData.subtotal ?? invoiceData.extractedData?.subtotal ?? 0;
+    const taxAmount = invoiceData.taxAmount ?? invoiceData.extractedData?.taxAmount ?? 0;
+    const totalAmount = invoiceData.totalAmount ?? invoiceData.extractedData?.totalAmount ?? 0;
+
+    // Calcul du pourcentage de TVA si nécessaire
+    const taxPercentage = subtotal > 0 ? Math.round((taxAmount / subtotal) * 100) : 0;
 
     const renderSection = (title: string, content: React.ReactNode, icon?: string) => (
         <View style={styles.section}>
@@ -64,14 +112,8 @@ export default function InvoiceModal() {
                 colors={[theme.colors.primary, theme.colors.primaryLight]}
                 style={styles.headerGradient}
             >
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => router.back()}
-                >
-                    <MaterialIcons name="arrow-back" size={24} color="white" />
-                </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>Détails de la Facture</Text>
+                <Text style={styles.headerTitle}></Text>
                 <Text style={styles.invoiceNumber}>{invoiceData.invoiceNumber}</Text>
             </LinearGradient>
 
@@ -85,7 +127,7 @@ export default function InvoiceModal() {
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Date:</Text>
                             <Text style={styles.infoValue}>
-                                {formatDate(invoiceData.invoiceDate || invoiceData.createdAt)}
+                                {formatDate(invoiceData.invoiceDate || invoiceData.extractedData?.invoiceDate)}
                             </Text>
                         </View>
                         <View style={styles.infoRow}>
@@ -103,23 +145,29 @@ export default function InvoiceModal() {
                 ), 'info')}
 
                 {/* Fournisseur */}
+                {/* Fournisseur */}
                 {renderSection('Fournisseur', (
                     <>
-                        <Text style={styles.supplierName}>{invoiceData.supplier?.name ?? 'Nom non spécifié'}</Text>
-                        {invoiceData.supplier?.address && (
+                        <Text style={styles.supplierName}>{supplier.name}</Text>
+
+                        {supplier.address && (
                             <View style={styles.addressContainer}>
                                 <MaterialIcons name="location-on" size={16} color={theme.colors.textSecondary} />
                                 <Text style={styles.supplierAddress}>
-                                    {invoiceData.supplier.address.split('\n').map((line, i) => (
-                                        <Text key={i}>{line}{i !== invoiceData.supplier.address.split('\n').length - 1 ? '\n' : ''}</Text>
+                                    {supplier.address.split('\n').map((line, i, arr) => (
+                                        <Text key={i}>
+                                            {line}
+                                            {i !== arr.length - 1 ? '\n' : ''}
+                                        </Text>
                                     ))}
                                 </Text>
                             </View>
                         )}
-                        {invoiceData.supplier?.taxId && (
+
+                        {supplier.taxId && (
                             <View style={styles.infoRow}>
-                                <Text style={styles.infoLabel}>SIRET:</Text>
-                                <Text style={styles.infoValue}>{invoiceData.supplier.taxId}</Text>
+                                <Text style={styles.infoLabel}>Identifiant fiscal:</Text>
+                                <Text style={styles.infoValue}>{supplier.taxId}</Text>
                             </View>
                         )}
                     </>
@@ -130,25 +178,27 @@ export default function InvoiceModal() {
                     <>
                         <View style={styles.amountRow}>
                             <Text style={styles.amountLabel}>Sous-total:</Text>
-                            <Text style={styles.amountValue}>{formatCurrency(invoiceData.subtotal)}</Text>
+                            <Text style={styles.amountValue}>{formatCurrency(subtotal)}</Text>
                         </View>
-                        {invoiceData.taxAmount > 0 && (
+
+                        {taxAmount > 0 && (
                             <View style={styles.amountRow}>
                                 <Text style={styles.amountLabel}>
-                                    TVA ({Math.round(invoiceData.taxAmount / invoiceData.subtotal * 100)}%):
+                                    TVA ({taxPercentage}%):
                                 </Text>
-                                <Text style={styles.amountValue}>{formatCurrency(invoiceData.taxAmount)}</Text>
+                                <Text style={styles.amountValue}>{formatCurrency(taxAmount)}</Text>
                             </View>
                         )}
+
                         <View style={[styles.amountRow, styles.totalAmountRow]}>
                             <Text style={styles.totalLabel}>Total:</Text>
-                            <Text style={styles.totalAmount}>{formatCurrency(invoiceData.totalAmount)}</Text>
+                            <Text style={styles.totalAmount}>{formatCurrency(totalAmount)}</Text>
                         </View>
                     </>
                 ), 'euro-symbol')}
 
                 {/* Articles */}
-                {renderSection(`Articles (${invoiceData.items?.length ?? 0})`, (
+                {renderSection(`Articles (${items.length})`, (
                     <View style={styles.itemsContainer}>
                         <View style={styles.itemsHeader}>
                             <Text style={[styles.itemHeaderText, { flex: 3 }]}>Description</Text>
@@ -156,10 +206,13 @@ export default function InvoiceModal() {
                             <Text style={styles.itemHeaderText}>Prix U.</Text>
                             <Text style={styles.itemHeaderText}>Total</Text>
                         </View>
-                        {invoiceData.items?.map((item, index) => (
+
+                        {items.map((item, index) => (
                             <View key={index} style={styles.itemRow}>
-                                <Text style={styles.itemDescription} numberOfLines={2}>{item.description}</Text>
-                                <Text style={styles.itemQuantity}>{item.quantity || 1}</Text>
+                                <Text style={styles.itemDescription} numberOfLines={2}>
+                                    {item.description}
+                                </Text>
+                                <Text style={styles.itemQuantity}>{item.quantity}</Text>
                                 <Text style={styles.itemUnitPrice}>{formatCurrency(item.unitPrice)}</Text>
                                 <Text style={styles.itemTotalPrice}>{formatCurrency(item.totalPrice)}</Text>
                             </View>
@@ -192,7 +245,9 @@ export default function InvoiceModal() {
                         </View>
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Créée le:</Text>
-                            <Text style={styles.infoValue}>{formatDate(invoiceData.createdAt)}</Text>
+                            <Text style={styles.infoValue}>
+                                {formatDate(invoiceData.createdAt)}
+                            </Text>
                         </View>
                     </>
                 ), 'info-outline')}
@@ -207,18 +262,12 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background,
     },
     headerGradient: {
-        paddingTop: 60,
+        paddingTop: 10,
         paddingBottom: 24,
         paddingHorizontal: 24,
         borderBottomLeftRadius: 24,
         borderBottomRightRadius: 24,
         elevation: 4,
-    },
-    backButton: {
-        position: 'absolute',
-        top: 40,
-        left: 16,
-        zIndex: 1,
     },
     headerTitle: {
         fontSize: 22,
@@ -227,10 +276,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     invoiceNumber: {
-        fontSize: 16,
+        fontSize: 22,
         color: 'rgba(255,255,255,0.8)',
         textAlign: 'center',
-        marginTop: 8,
     },
     scrollContainer: {
         padding: 24,
@@ -401,5 +449,30 @@ const styles = StyleSheet.create({
         color: theme.colors.primary,
         fontWeight: '500',
         marginLeft: 8,
+    },
+    supplierName: {
+        ...theme.text.h3,
+        color: theme.colors.text,
+        marginBottom: 8,
+        fontWeight: '600',
+    },
+    supplierAddress: {
+        ...theme.text.body,
+        color: theme.colors.textSecondary,
+        marginLeft: 8,
+        lineHeight: 20,
+    },
+    itemDescription: {
+        flex: 3,
+        paddingRight: 8,
+        ...theme.text.body,
+        color: theme.colors.text,
+        fontWeight: '500',
+    },
+    itemQuantity: {
+        flex: 1,
+        textAlign: 'center',
+        ...theme.text.body,
+        color: theme.colors.text,
     },
 });

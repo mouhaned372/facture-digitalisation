@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyBYm6243y4aV6uWyKWEXfSf7Rdr3rg0gpo');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyAIERMqHUKkkqCFeYjiLvHiq0abgL9KmBo');
 
 async function extractInvoiceData(imageBase64) {
     try {

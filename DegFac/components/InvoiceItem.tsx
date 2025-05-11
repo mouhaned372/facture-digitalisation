@@ -4,6 +4,8 @@ import { theme } from '@/constants/theme';
 
 interface Supplier {
     name?: string;
+    address?: string;
+    taxId?: string;
 }
 
 interface Invoice {
@@ -12,12 +14,19 @@ interface Invoice {
     invoiceDate?: string;
     paymentStatus?: string;
     totalAmount?: number;
-    supplier?: Supplier;
+    supplier?: Supplier; // Maintenant au niveau racine
+    extractedData?: {
+        supplier?: Supplier;
+    invoiceNumber?: string;
+    invoiceDate?: string;
+    totalAmount?: number;
+    }
 }
 
 interface InvoiceItemProps {
     invoice: Invoice | null;
     onPress: () => void;
+    
 }
 
 export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {

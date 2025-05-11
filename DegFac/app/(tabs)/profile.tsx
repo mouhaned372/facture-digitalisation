@@ -1,14 +1,14 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, gradients, shadows, typography } from '@/constants/theme';
+import { theme } from '@/constants/theme';
 
 export default function ProfilePage() {
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <View style={styles.header}>
                 <LinearGradient
-                    colors={gradients.primary}
+                    colors={theme.gradients.primary}
                     style={styles.avatarContainer}
                 >
                     <Text style={styles.avatarText}>JD</Text>
@@ -36,31 +36,31 @@ export default function ProfilePage() {
                 <Text style={styles.sectionTitle}>Paramètres</Text>
                 <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIcon}>
-                        <MaterialIcons name="account-circle" size={24} color={colors.primary} />
+                        <MaterialIcons name="account-circle" size={24} color={theme.colors.primary} />
                     </View>
                     <Text style={styles.menuText}>Compte</Text>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.gray400} />
+                    <MaterialIcons name="chevron-right" size={24} color={theme.colors.gray400} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIcon}>
-                        <MaterialIcons name="notifications" size={24} color={colors.primary} />
+                        <MaterialIcons name="notifications" size={24} color={theme.colors.primary} />
                     </View>
                     <Text style={styles.menuText}>Notifications</Text>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.gray400} />
+                    <MaterialIcons name="chevron-right" size={24} color={theme.colors.gray400} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIcon}>
-                        <MaterialIcons name="security" size={24} color={colors.primary} />
+                        <MaterialIcons name="security" size={24} color={theme.colors.primary} />
                     </View>
                     <Text style={styles.menuText}>Sécurité</Text>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.gray400} />
+                    <MaterialIcons name="chevron-right" size={24} color={theme.colors.gray400} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIcon}>
-                        <MaterialIcons name="payment" size={24} color={colors.primary} />
+                        <MaterialIcons name="payment" size={24} color={theme.colors.primary} />
                     </View>
                     <Text style={styles.menuText}>Paiement</Text>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.gray400} />
+                    <MaterialIcons name="chevron-right" size={24} color={theme.colors.gray400} />
                 </TouchableOpacity>
             </View>
 
@@ -68,30 +68,30 @@ export default function ProfilePage() {
                 <Text style={styles.sectionTitle}>Support</Text>
                 <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIcon}>
-                        <MaterialIcons name="help" size={24} color={colors.primary} />
+                        <MaterialIcons name="help" size={24} color={theme.colors.primary} />
                     </View>
                     <Text style={styles.menuText}>Aide & FAQ</Text>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.gray400} />
+                    <MaterialIcons name="chevron-right" size={24} color={theme.colors.gray400} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIcon}>
-                        <MaterialIcons name="email" size={24} color={colors.primary} />
+                        <MaterialIcons name="email" size={24} color={theme.colors.primary} />
                     </View>
                     <Text style={styles.menuText}>Nous contacter</Text>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.gray400} />
+                    <MaterialIcons name="chevron-right" size={24} color={theme.colors.gray400} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIcon}>
-                        <MaterialIcons name="star" size={24} color={colors.primary} />
+                        <MaterialIcons name="star" size={24} color={theme.colors.primary} />
                     </View>
                     <Text style={styles.menuText}>Évaluer l'application</Text>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.gray400} />
+                    <MaterialIcons name="chevron-right" size={24} color={theme.colors.gray400} />
                 </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={[styles.logoutButton, shadows.sm]}>
+            <TouchableOpacity style={[styles.logoutButton, theme.shadows.sm]}>
                 <Text style={styles.logoutText}>Se déconnecter</Text>
-                <Feather name="log-out" size={20} color={colors.danger} />
+                <Feather name="log-out" size={20} color={theme.colors.danger} />
             </TouchableOpacity>
 
             <View style={styles.footer}>
@@ -122,22 +122,22 @@ const styles = StyleSheet.create({
     avatarText: {
         fontSize: 36,
         fontWeight: '600',
-        color: colors.white,
+        color: theme.colors.white,
     },
     name: {
-        ...typography.h2,
-        color: colors.gray800,
+        ...theme.typography.h2,
+        color: theme.colors.gray800,
         marginBottom: 4,
     },
     email: {
-        ...typography.body1,
-        color: colors.gray600,
+        ...theme.typography.body1,
+        color: theme.colors.gray600,
     },
     statsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 24,
-        backgroundColor: colors.white,
+        backgroundColor: theme.colors.white,
         borderRadius: 16,
         padding: 16,
     },
@@ -146,23 +146,23 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     statValue: {
-        ...typography.h3,
-        color: colors.primary,
+        ...theme.typography.h3,
+        color: theme.colors.primary,
         marginBottom: 4,
     },
     statLabel: {
-        ...typography.body2,
-        color: colors.gray600,
+        ...theme.typography.body2,
+        color: theme.colors.gray600,
     },
     section: {
         marginBottom: 24,
-        backgroundColor: colors.white,
+        backgroundColor: theme.colors.white,
         borderRadius: 16,
         padding: 16,
     },
     sectionTitle: {
-        ...typography.h3,
-        color: colors.gray800,
+        ...theme.typography.h3,
+        color: theme.colors.gray800,
         marginBottom: 16,
     },
     menuItem: {
@@ -175,8 +175,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     menuText: {
-        ...typography.body1,
-        color: colors.gray800,
+        ...theme.typography.body1,
+        color: theme.colors.gray800,
         flex: 1,
         marginLeft: 8,
     },
@@ -185,13 +185,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 16,
-        backgroundColor: colors.white,
+        backgroundColor: theme.colors.white,
         borderRadius: 12,
         marginBottom: 24,
     },
     logoutText: {
-        ...typography.body1,
-        color: colors.danger,
+        ...theme.typography.body1,
+        color: theme.colors.danger,
         fontWeight: '600',
         marginRight: 8,
     },
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     footerText: {
-        ...typography.body2,
-        color: colors.gray600,
+        ...theme.typography.body2,
+        color: theme.colors.gray600,
     },
 });

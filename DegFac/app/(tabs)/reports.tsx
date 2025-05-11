@@ -5,6 +5,7 @@ import { Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get('window').width;
+const chartWidth = screenWidth - 40; // Largeur ajustée avec padding
 
 export default function ReportsPage() {
     // Données simulées pour les graphiques
@@ -88,12 +89,17 @@ export default function ReportsPage() {
             strokeWidth: '2',
             stroke: '#6C63FF',
         },
+        propsForLabels: {
+            fontSize: 10,
+        },
+        barPercentage: 0.5,
     };
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Text style={styles.title}>Analyses et Rapports</Text>
 
+            {/* Carte Dépenses mensuelles */}
             <View style={styles.card}>
                 <View style={styles.cardHeader}>
                     <MaterialIcons name="show-chart" size={20} color={theme.colors.primary} />
@@ -101,7 +107,7 @@ export default function ReportsPage() {
                 </View>
                 <BarChart
                     data={monthlyData}
-                    width={screenWidth - theme.spacing.xl * 2}
+                    width={chartWidth}
                     height={220}
                     yAxisLabel="€"
                     yAxisSuffix=""
@@ -113,44 +119,48 @@ export default function ReportsPage() {
                 />
             </View>
 
+            {/* Cartes en ligne */}
             <View style={styles.row}>
-                <View style={[styles.card, { flex: 1 }]}>
+                {/* Carte Par catégorie */}
+                <View style={[styles.card, styles.halfCard]}>
                     <View style={styles.cardHeader}>
-                        <MaterialIcons name="pie-chart" size={20} color={theme.colors.primary} />
+                        <MaterialIcons name="pie-chart" size={18} color={theme.colors.primary} />
                         <Text style={styles.cardTitle}>Par catégorie</Text>
                     </View>
                     <PieChart
                         data={categoryData}
-                        width={screenWidth / 2 - theme.spacing.xl * 1.5}
-                        height={160}
+                        width={chartWidth / 2 - 10}
+                        height={140}
                         chartConfig={chartConfig}
                         accessor="amount"
                         backgroundColor="transparent"
-                        paddingLeft="15"
+                        paddingLeft="10"
                         absolute
                         style={styles.chart}
                     />
                 </View>
 
-                <View style={[styles.card, { flex: 1 }]}>
+                {/* Carte Par fournisseur */}
+                <View style={[styles.card, styles.halfCard]}>
                     <View style={styles.cardHeader}>
-                        <MaterialIcons name="business" size={20} color={theme.colors.primary} />
+                        <MaterialIcons name="business" size={18} color={theme.colors.primary} />
                         <Text style={styles.cardTitle}>Par fournisseur</Text>
                     </View>
                     <PieChart
                         data={supplierData}
-                        width={screenWidth / 2 - theme.spacing.xl * 1.5}
-                        height={160}
+                        width={chartWidth / 2 - 10}
+                        height={140}
                         chartConfig={chartConfig}
                         accessor="amount"
                         backgroundColor="transparent"
-                        paddingLeft="15"
+                        paddingLeft="10"
                         absolute
                         style={styles.chart}
                     />
                 </View>
             </View>
 
+            {/* Carte Statistiques clés */}
             <View style={styles.card}>
                 <View style={styles.cardHeader}>
                     <MaterialIcons name="attach-money" size={20} color={theme.colors.primary} />
@@ -181,56 +191,70 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background,
     },
     content: {
-        padding: theme.spacing.xl,
+        padding: 16,
+        paddingBottom: 30,
     },
     title: {
-        ...theme.text.h1,
+        fontSize: 24,
+        fontWeight: '700',
         color: theme.colors.text,
-        marginBottom: theme.spacing.lg,
+        marginBottom: 20,
+        marginTop: 10,
     },
     card: {
         backgroundColor: theme.colors.card,
-        borderRadius: theme.radius.lg,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.lg,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
         elevation: 2,
+    },
+    halfCard: {
+        flex: 1,
+        marginHorizontal: 4,
     },
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: theme.spacing.md,
+        marginBottom: 12,
     },
     cardTitle: {
-        ...theme.text.h3,
+        fontSize: 16,
+        fontWeight: '600',
         color: theme.colors.text,
-        marginLeft: theme.spacing.sm,
+        marginLeft: 8,
     },
     chart: {
-        borderRadius: theme.radius.md,
+        borderRadius: 8,
+        marginTop: 8,
     },
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginHorizontal: -4,
     },
     statsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginTop: 8,
     },
     statItem: {
         alignItems: 'center',
         flex: 1,
+        paddingHorizontal: 8,
     },
     statValue: {
-        ...theme.text.h2,
+        fontSize: 18,
+        fontWeight: '700',
         color: theme.colors.primary,
     },
     statLabel: {
-        ...theme.text.caption,
+        fontSize: 12,
         color: theme.colors.textSecondary,
-        marginTop: theme.spacing.xs,
+        marginTop: 4,
+        textAlign: 'center',
     },
 });
