@@ -2,6 +2,7 @@ const multer = require('multer');
 const Invoice = require('../models/Invoice');
 const { extractInvoiceData } = require('../services/geminiService');
 
+// Configuration du stockage en mémoire
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -13,17 +14,22 @@ exports.uploadInvoice = [
                 return res.status(400).json({ message: 'Aucun fichier téléchargé' });
             }
 
-            const imageBase64 = req.file.buffer.toString('base64');
-            const extractedData = await extractInvoiceData(imageBase64);
+            let extractedData = await extractInvoiceData(
+                req.file.buffer,
+                req.file.mimetype
+            );
 
-            // Validation des données requises
-            if (!extractedData.totalAmount) {
-                throw new Error('Le montant total est requis');
+            // Vérifier et ajuster le numéro si nécessaire
+            let counter = 1;
+            let originalNumber = extractedData.invoiceNumber;
+
+            while (await Invoice.exists({ invoiceNumber: extractedData.invoiceNumber })) {
+                extractedData.invoiceNumber = `${originalNumber}-${counter++}`;
             }
 
             const invoice = new Invoice({
                 ...extractedData,
-                totalAmount: extractedData.totalAmount || 0, // Valeur par défaut
+                totalAmount: extractedData.totalAmount || 0,
                 extractedData,
             });
 
@@ -39,7 +45,6 @@ exports.uploadInvoice = [
         }
     },
 ];
-
 exports.getAllInvoices = async (req, res) => {
     try {
         const invoices = await Invoice.find().sort({ createdAt: -1 });

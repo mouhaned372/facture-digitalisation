@@ -68,7 +68,10 @@ export default function GalleryUploadPage() {
         }
     };
 
-    const uploadImage = async (uri: string) => {
+    // Le code React Native reste exactement le même car il utilise déjà FormData
+// qui envoie le fichier directement sans conversion base64
+
+    const uploadImage = async (uri) => {
         try {
             const formData = new FormData();
             formData.append('image', {

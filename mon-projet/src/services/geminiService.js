@@ -2,12 +2,12 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyAIERMqHUKkkqCFeYjiLvHiq0abgL9KmBo');
 
-async function extractInvoiceData(imageBase64) {
+async function extractInvoiceData(fileBuffer, mimeType) {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const prompt = `
-        Analysez cette image de facture et extrayez toutes les informations disponibles. : et essentiellement le nom et les detail de fournissseur 
+        Analysez cette image de facture et extrayez toutes les informations disponibles, en particulier le nom et les détails du fournisseur.
         Retournez uniquement un JSON valide avec la structure suivante :
 
         {
@@ -40,8 +40,8 @@ async function extractInvoiceData(imageBase64) {
             prompt,
             {
                 inlineData: {
-                    data: imageBase64,
-                    mimeType: 'image/jpeg',
+                    data: fileBuffer.toString('base64'),
+                    mimeType: mimeType || 'image/jpeg',
                 },
             },
         ]);
