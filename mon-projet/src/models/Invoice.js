@@ -48,6 +48,19 @@ const SupplierSchema = new mongoose.Schema({
     }
 }, { _id: false });
 
+const NotificationSchema = new mongoose.Schema({
+    type: {
+        type: String,
+        enum: ['payment_reminder', 'payment_overdue'],
+        required: true
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    },
+    message: String
+}, { _id: false });
+
 const InvoiceSchema = new mongoose.Schema(
     {
         invoiceNumber: {
@@ -56,7 +69,7 @@ const InvoiceSchema = new mongoose.Schema(
             trim: true
         },
         invoiceDate: {
-            type: String,  // Changé de Date à String
+            type: String,
             required: true,
             validate: {
                 validator: function(v) {
@@ -66,10 +79,20 @@ const InvoiceSchema = new mongoose.Schema(
             }
         },
         dueDate: {
-            type: String,  // Changé de Date à String
+            type: String,
             validate: {
                 validator: function(v) {
-                    if (!v) return true;  // Optionnel
+                    if (!v) return true;
+                    return /^\d{2}\/\d{2}\/\d{4}$/.test(v);
+                },
+                message: props => `${props.value} n'est pas une date valide (format JJ/MM/AAAA)`
+            }
+        },
+        paymentDate: {
+            type: String,
+            validate: {
+                validator: function(v) {
+                    if (!v) return true;
                     return /^\d{2}\/\d{2}\/\d{4}$/.test(v);
                 },
                 message: props => `${props.value} n'est pas une date valide (format JJ/MM/AAAA)`
@@ -105,6 +128,7 @@ const InvoiceSchema = new mongoose.Schema(
             enum: ['pending', 'paid', 'cancelled'],
             default: 'pending'
         },
+        notifications: [NotificationSchema],
         extractedData: {
             type: mongoose.Schema.Types.Mixed,
             required: true
@@ -132,61 +156,21 @@ InvoiceSchema.pre('save', function(next) {
 
 // Index pour les recherches fréquentes
 InvoiceSchema.index({ invoiceNumber: 1 });
-InvoiceSchema.index({ 'supplier.name': 1 });
-InvoiceSchema.index({ totalAmount: 1 });
 InvoiceSchema.index({ paymentStatus: 1 });
-InvoiceSchema.index({ createdAt: -1 });
+InvoiceSchema.index({ dueDate: 1 });
+InvoiceSchema.index({ paymentDate: 1 });
 
-// Méthode statique pour trouver les factures par fournisseur
-InvoiceSchema.statics.findBySupplier = function(supplierName) {
-    return this.find({ 'supplier.name': new RegExp(supplierName, 'i') });
-};
+// Méthode pour vérifier si une facture est en retard
+InvoiceSchema.methods.isOverdue = function() {
+    if (this.paymentStatus !== 'pending' || !this.dueDate) return false;
 
-// Méthode d'instance pour marquer comme payée
-InvoiceSchema.methods.markAsPaid = function() {
-    this.paymentStatus = 'paid';
-    return this.save();
+    const today = new Date();
+    const dueDateParts = this.dueDate.split('/');
+    const dueDate = new Date(`${dueDateParts[2]}-${dueDateParts[1]}-${dueDateParts[0]}`);
+
+    return dueDate < today;
 };
 
 const Invoice = mongoose.model('Invoice', InvoiceSchema);
 
 module.exports = Invoice;
-
-
-
-
-
-// const mongoose = require('mongoose');
-//
-// const InvoiceItemSchema = new mongoose.Schema({
-//     description: { type: String, required: true },
-//     quantity: { type: Number, required: true },
-//     unitPrice: { type: Number, required: true },
-//     totalPrice: { type: Number, required: true },
-// });
-//
-// const SupplierSchema = new mongoose.Schema({
-//     name: { type: String, required: true },
-//     address: { type: String },
-//     taxId: { type: String },
-//     email: { type: String },
-//     phone: { type: String },
-// });
-//
-// const InvoiceSchema = new mongoose.Schema(
-//     {
-//         invoiceNumber: { type: String },
-//         invoiceDate: { type: String },
-//         dueDate: { type: String },
-//         supplier: { type: SupplierSchema, required: true },
-//         items: { type: [InvoiceItemSchema], required: true },
-//         subtotal: { type: Number },
-//         taxAmount: { type: Number },
-//         totalAmount: { type: Number, required: true },
-//         paymentStatus: { type: String, default: 'pending' },
-//         extractedData: { type: mongoose.Schema.Types.Mixed, required: true },
-//     },
-//     { timestamps: true }
-// );
-//
-// module.exports = mongoose.model('Invoice', InvoiceSchema);

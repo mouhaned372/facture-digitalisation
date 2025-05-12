@@ -2,44 +2,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 
-interface Supplier {
-    name?: string;
-    address?: string;
-    taxId?: string;
-}
-
-interface Invoice {
-    _id: string;
-    invoiceNumber?: string;
-    invoiceDate?: string;
-    paymentStatus?: string;
-    totalAmount?: number;
-    supplier?: Supplier; // Maintenant au niveau racine
-    extractedData?: {
-        supplier?: Supplier;
-    invoiceNumber?: string;
-    invoiceDate?: string;
-    totalAmount?: number;
-    }
-}
-
-interface InvoiceItemProps {
-    invoice: Invoice | null;
-    onPress: () => void;
-    
-}
-
-export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {
-    // Vérification de l'existence de la facture
-    if (!invoice) {
-        return (
-            <View style={styles.container}>
-                <Text style={styles.errorText}>Facture invalide</Text>
-            </View>
-        );
-    }
-
-    const formatDate = (dateString?: string) => {
+export default function InvoiceItem({ invoice, onPress, isOverdue }) {
+    const formatDate = (dateString) => {
         if (!dateString) return 'Date inconnue';
 
         try {
@@ -47,20 +11,18 @@ export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {
             return date.toLocaleDateString('fr-FR', {
                 day: '2-digit',
                 month: 'short',
-                year: 'numeric',
             });
         } catch {
-            return 'Date invalide';
+            return dateString; // Si c'est déjà au format JJ/MM/AAAA
         }
     };
 
-    const formatNumber = (amount?: number) => {
-        if (amount === undefined || amount === null) return 'N/A';
-
+    const formatAmount = (amount) => {
         return new Intl.NumberFormat('fr-FR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
+            style: 'currency',
+            currency: 'EUR',
+            minimumFractionDigits: 2
+        }).format(amount || 0);
     };
 
     return (
@@ -71,7 +33,9 @@ export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {
                         styles.statusIndicator,
                         invoice.paymentStatus === 'paid'
                             ? styles.paidStatus
-                            : styles.pendingStatus
+                            : isOverdue
+                                ? styles.overdueStatus
+                                : styles.pendingStatus
                     ]} />
 
                     <View>
@@ -79,19 +43,28 @@ export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {
                             {invoice.invoiceNumber || 'N° Inconnu'}
                         </Text>
                         <Text style={styles.supplier}>
-                            {invoice.supplier?.name || 'Fournisseur non spécifié'}
+                            {invoice.supplier?.name || 'Fournisseur inconnu'}
                         </Text>
                     </View>
                 </View>
 
                 <View style={styles.rightContainer}>
                     <Text style={styles.amount}>
-                        {formatNumber(invoice.totalAmount)}
+                        {formatAmount(invoice.totalAmount)}
                     </Text>
                     <Text style={styles.date}>
                         {formatDate(invoice.invoiceDate)}
                     </Text>
                 </View>
+
+                {isOverdue && (
+                    <MaterialIcons
+                        name="warning"
+                        size={20}
+                        color={theme.colors.danger}
+                        style={styles.warningIcon}
+                    />
+                )}
 
                 <MaterialIcons
                     name="chevron-right"
@@ -105,11 +78,13 @@ export default function InvoiceItem({ invoice, onPress }: InvoiceItemProps) {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: theme.colors.card,
-        padding: theme.spacing.lg,
+        backgroundColor: 'white',
+        padding: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.border,
     },
     leftContainer: {
         flexDirection: 'row',
@@ -120,7 +95,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        marginRight: theme.spacing.md,
+        marginRight: 12,
     },
     paidStatus: {
         backgroundColor: theme.colors.success,
@@ -128,33 +103,32 @@ const styles = StyleSheet.create({
     pendingStatus: {
         backgroundColor: theme.colors.warning,
     },
+    overdueStatus: {
+        backgroundColor: theme.colors.danger,
+    },
     invoiceNumber: {
-        ...theme.text.body,
+        fontWeight: 'bold',
         color: theme.colors.text,
-        fontWeight: '600',
-        marginBottom: theme.spacing.xs,
     },
     supplier: {
-        ...theme.text.caption,
         color: theme.colors.textSecondary,
+        marginTop: 4,
+        fontSize: 14,
     },
     rightContainer: {
         alignItems: 'flex-end',
-        marginRight: theme.spacing.md,
+        marginRight: 12,
     },
     amount: {
-        ...theme.text.body,
+        fontWeight: 'bold',
         color: theme.colors.text,
-        fontWeight: '600',
-        marginBottom: theme.spacing.xs,
     },
     date: {
-        ...theme.text.caption,
         color: theme.colors.textSecondary,
+        marginTop: 4,
+        fontSize: 14,
     },
-    errorText: {
-        ...theme.text.body,
-        color: theme.colors.danger,
-        textAlign: 'center',
+    warningIcon: {
+        marginRight: 8,
     },
 });

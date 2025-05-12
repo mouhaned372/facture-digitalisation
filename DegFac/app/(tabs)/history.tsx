@@ -4,14 +4,13 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import InvoiceItem from '@/components/InvoiceItem';
-import { Invoice } from '@/types/invoice';
 import axios from 'axios';
 import { API_URL } from '@/constants/config';
 
 export default function HistoryPage() {
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
     const router = useRouter();
 
@@ -22,17 +21,22 @@ export default function HistoryPage() {
     const fetchInvoices = async () => {
         try {
             setRefreshing(true);
-            const response = await axios.get(`${API_URL}/invoices`);
-            if (response.data && Array.isArray(response.data)) {
-                const validInvoices = response.data.filter(inv => inv && inv.totalAmount !== undefined);
-                setInvoices(validInvoices);
-                if (validInvoices.length !== response.data.length) {
-                    console.warn('Certaines factures ont été filtrées car incomplètes');
-                }
-                setError(null);
-            } else {
-                setError('Format de réponse invalide');
-            }
+            const [normalResponse, overdueResponse] = await Promise.all([
+                axios.get(`${API_URL}/invoices`),
+                axios.get(`${API_URL}/invoices/overdue`)
+            ]);
+
+            const allInvoices = normalResponse.data;
+            const overdueInvoices = overdueResponse.data;
+
+            // Marquer les factures en retard
+            const updatedInvoices = allInvoices.map(invoice => {
+                const isOverdue = overdueInvoices.some(ov => ov._id === invoice._id);
+                return { ...invoice, isOverdue };
+            });
+
+            setInvoices(updatedInvoices);
+            setError(null);
         } catch (err) {
             console.error(err);
             setError('Erreur de chargement des factures');
@@ -43,10 +47,6 @@ export default function HistoryPage() {
     };
 
     const handleRefresh = () => fetchInvoices();
-
-    const paidInvoices = invoices.filter(inv => inv.paymentStatus === 'paid');
-    const pendingInvoices = invoices.filter(inv => inv.paymentStatus !== 'paid');
-    const totalAmount = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
 
     if (loading && !refreshing) {
         return (
@@ -71,7 +71,8 @@ export default function HistoryPage() {
     return (
         <View style={styles.container}>
             <FlatList
-                data={invoices.filter(inv => inv && inv._id)}
+                data={invoices}
+                keyExtractor={(item) => item._id}
                 renderItem={({ item }) => (
                     <InvoiceItem
                         invoice={item}
@@ -79,60 +80,29 @@ export default function HistoryPage() {
                             pathname: '/modal',
                             params: { invoice: JSON.stringify(item) }
                         })}
+                        isOverdue={item.isOverdue}
                     />
                 )}
                 ListHeaderComponent={
                     <View style={styles.header}>
-                        <View style={styles.statsContainer}>
-                            <View style={styles.statCard}>
-                                <Text style={styles.statValue}>{invoices.length}</Text>
-                                <Text style={styles.statLabel}>Total</Text>
+                        <Text style={styles.headerTitle}>Historique des Factures</Text>
+                        {invoices.some(i => i.isOverdue) && (
+                            <View style={styles.alertBadge}>
+                                <MaterialIcons name="warning" size={20} color="white" />
+                                <Text style={styles.alertText}>Factures en retard</Text>
                             </View>
-                            <View style={styles.statCard}>
-                                <Text style={styles.statValue}>{paidInvoices.length}</Text>
-                                <Text style={styles.statLabel}>Payées</Text>
-                            </View>
-                            <View style={styles.statCard}>
-                                <Text style={styles.statValue}>{pendingInvoices.length}</Text>
-                                <Text style={styles.statLabel}>En attente</Text>
-                            </View>
-                            <View style={styles.statCard}>
-                                <Text style={styles.statValue}>
-                                    {totalAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
-                                </Text>
-                                <Text style={styles.statLabel}>Montant total</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.filterContainer}>
-                            <TouchableOpacity style={styles.filterButton}>
-                                <Text style={styles.filterButtonText}>Toutes</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.filterButton}>
-                                <Text style={styles.filterButtonText}>Payées</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.filterButton}>
-                                <Text style={styles.filterButtonText}>En attente</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.filterButton}>
-                                <MaterialIcons name="filter-list" size={20} color={theme.colors.primary} />
-                            </TouchableOpacity>
-                        </View>
+                        )}
                     </View>
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
                         <MaterialIcons name="receipt" size={60} color={theme.colors.placeholder} />
                         <Text style={styles.emptyText}>Aucune facture trouvée</Text>
-                        <Text style={styles.emptySubtext}>
-                            Scannez ou importez votre première facture pour commencer
-                        </Text>
                     </View>
                 }
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
                 contentContainerStyle={invoices.length === 0 ? { flex: 1 } : null}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
             />
         </View>
     );
@@ -152,91 +122,57 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: theme.spacing.xl,
+        padding: 24,
     },
     errorText: {
-        ...theme.text.h3,
+        fontSize: 18,
         color: theme.colors.danger,
-        marginTop: theme.spacing.md,
+        marginVertical: 16,
         textAlign: 'center',
     },
     retryButton: {
-        marginTop: theme.spacing.lg,
         backgroundColor: theme.colors.primary,
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.md,
-        borderRadius: theme.radius.md,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 8,
     },
     retryButtonText: {
-        ...theme.text.body,
         color: 'white',
-        fontWeight: '600',
+        fontWeight: 'bold',
     },
     header: {
-        padding: theme.spacing.lg,
-        backgroundColor: theme.colors.card,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.colors.border,
-    },
-    statsContainer: {
+        padding: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: theme.spacing.lg,
-    },
-    statCard: {
-        alignItems: 'center',
-        padding: theme.spacing.md,
-        backgroundColor: theme.colors.background,
-        borderRadius: theme.radius.md,
-        flex: 1,
-        marginHorizontal: theme.spacing.xs,
-    },
-    statValue: {
-        ...theme.text.h3,
-        color: theme.colors.primary,
-    },
-    statLabel: {
-        ...theme.text.caption,
-        color: theme.colors.textSecondary,
-        marginTop: theme.spacing.xs,
-    },
-    filterContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    filterButton: {
-        padding: theme.spacing.sm,
-        backgroundColor: theme.colors.background,
-        borderRadius: theme.radius.sm,
-        flex: 1,
-        marginHorizontal: theme.spacing.xs,
         alignItems: 'center',
     },
-    filterButtonText: {
-        ...theme.text.caption,
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
         color: theme.colors.text,
-        fontWeight: '500',
+    },
+    alertBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.colors.danger,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    alertText: {
+        color: 'white',
+        marginLeft: 4,
+        fontWeight: 'bold',
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: theme.spacing.xl,
+        padding: 24,
     },
     emptyText: {
-        ...theme.text.h3,
+        fontSize: 18,
         color: theme.colors.textSecondary,
-        marginTop: theme.spacing.lg,
-    },
-    emptySubtext: {
-        ...theme.text.body,
-        color: theme.colors.placeholder,
-        marginTop: theme.spacing.sm,
-        textAlign: 'center',
-    },
-    separator: {
-        height: 1,
-        backgroundColor: theme.colors.border,
-        marginHorizontal: theme.spacing.lg,
+        marginTop: 16,
     },
 });
