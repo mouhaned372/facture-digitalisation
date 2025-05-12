@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
         color: theme.colors.text,
     },
     headerActions: {
-        flexDirection: 'row',
+        flexDirection: 'column-reverse',
         alignItems: 'center',
         gap: 12,
     },
