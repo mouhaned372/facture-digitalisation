@@ -6,12 +6,14 @@ const {
     updateInvoice,
     deleteInvoice,
     markAsPaid,
+    createManualInvoice, // Fixed typo and added comma
     getOverdueInvoices
 } = require('../controllers/invoiceController');
 
 const router = express.Router();
 
-router.post('/upload', ...uploadInvoice);
+router.post('/upload', uploadInvoice); // Removed spread operator unless uploadInvoice is an array
+router.post('/manual', createManualInvoice);
 router.get('/', getAllInvoices);
 router.get('/overdue', getOverdueInvoices);
 router.get('/:id', getInvoiceById);

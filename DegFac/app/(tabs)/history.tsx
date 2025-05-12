@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
@@ -29,11 +29,10 @@ export default function HistoryPage() {
             const allInvoices = normalResponse.data;
             const overdueInvoices = overdueResponse.data;
 
-            // Marquer les factures en retard
-            const updatedInvoices = allInvoices.map(invoice => {
-                const isOverdue = overdueInvoices.some(ov => ov._id === invoice._id);
-                return { ...invoice, isOverdue };
-            });
+            const updatedInvoices = allInvoices.map(invoice => ({
+                ...invoice,
+                isOverdue: overdueInvoices.some(ov => ov._id === invoice._id)
+            }));
 
             setInvoices(updatedInvoices);
             setError(null);
@@ -52,6 +51,7 @@ export default function HistoryPage() {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={styles.loadingText}>Chargement des factures...</Text>
             </View>
         );
     }
@@ -59,17 +59,40 @@ export default function HistoryPage() {
     if (error) {
         return (
             <View style={styles.errorContainer}>
-                <MaterialIcons name="error-outline" size={48} color={theme.colors.danger} />
-                <Text style={styles.errorText}>{error}</Text>
-                <TouchableOpacity style={styles.retryButton} onPress={fetchInvoices}>
-                    <Text style={styles.retryButtonText}>Réessayer</Text>
-                </TouchableOpacity>
+                <View style={styles.errorCard}>
+                    <MaterialIcons name="error-outline" size={32} color={theme.colors.danger} />
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity
+                        style={styles.retryButton}
+                        onPress={fetchInvoices}
+                    >
+                        <Text style={styles.retryButtonText}>Réessayer</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Historique des Factures</Text>
+                <View style={styles.headerActions}>
+                    {invoices.some(i => i.isOverdue) && (
+                        <TouchableOpacity
+                            style={styles.alertBadge}
+                            onPress={() => router.push('/overdue')}
+                        >
+                            <MaterialIcons name="warning" size={16} color="white" />
+                            <Text style={styles.alertText}>Retard</Text>
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity style={styles.filterButton}>
+                        <MaterialIcons name="filter-list" size={20} color={theme.colors.primary} />
+                    </TouchableOpacity>
+                </View>
+            </View>
+
             <FlatList
                 data={invoices}
                 keyExtractor={(item) => item._id}
@@ -83,26 +106,37 @@ export default function HistoryPage() {
                         isOverdue={item.isOverdue}
                     />
                 )}
-                ListHeaderComponent={
-                    <View style={styles.header}>
-                        <Text style={styles.headerTitle}>Historique des Factures</Text>
-                        {invoices.some(i => i.isOverdue) && (
-                            <View style={styles.alertBadge}>
-                                <MaterialIcons name="warning" size={20} color="white" />
-                                <Text style={styles.alertText}>Factures en retard</Text>
-                            </View>
-                        )}
-                    </View>
-                }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <MaterialIcons name="receipt" size={60} color={theme.colors.placeholder} />
-                        <Text style={styles.emptyText}>Aucune facture trouvée</Text>
+                        <View style={styles.emptyIllustration}>
+                            <MaterialIcons
+                                name="receipt"
+                                size={48}
+                                color={theme.colors.placeholder}
+                            />
+                        </View>
+                        <Text style={styles.emptyTitle}>Aucune facture trouvée</Text>
+                        <Text style={styles.emptySubtitle}>
+                            Scannez ou importez votre première facture pour commencer
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.emptyAction}
+                            onPress={() => router.push('/scan')}
+                        >
+                            <Text style={styles.emptyActionText}>Scanner une facture</Text>
+                        </TouchableOpacity>
                     </View>
                 }
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                contentContainerStyle={invoices.length === 0 ? { flex: 1 } : null}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={[theme.colors.primary]}
+                        tintColor={theme.colors.primary}
+                    />
+                }
+                contentContainerStyle={styles.listContent}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
             />
         </View>
     );
@@ -117,6 +151,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        gap: 16,
+    },
+    loadingText: {
+        fontSize: 16,
+        color: theme.colors.textSecondary,
     },
     errorContainer: {
         flex: 1,
@@ -124,10 +163,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 24,
     },
+    errorCard: {
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 24,
+        width: '100%',
+        alignItems: 'center',
+        gap: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 2,
+    },
     errorText: {
-        fontSize: 18,
-        color: theme.colors.danger,
-        marginVertical: 16,
+        fontSize: 16,
+        color: theme.colors.text,
         textAlign: 'center',
     },
     retryButton: {
@@ -135,21 +186,32 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         paddingVertical: 12,
         borderRadius: 8,
+        marginTop: 8,
     },
     retryButtonText: {
         color: 'white',
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
     header: {
-        padding: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        backgroundColor: 'white',
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.borderLight,
+        marginBottom:50,
     },
     headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 22,
+        fontWeight: '700',
         color: theme.colors.text,
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
     },
     alertBadge: {
         flexDirection: 'row',
@@ -158,21 +220,61 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
+        gap: 4,
     },
     alertText: {
         color: 'white',
-        marginLeft: 4,
-        fontWeight: 'bold',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    filterButton: {
+        padding: 6,
+    },
+    listContent: {
+        paddingHorizontal: 16,
+        paddingBottom: 24,
+    },
+    separator: {
+        height: 12,
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 24,
+        padding: 40,
+        gap: 16,
     },
-    emptyText: {
+    emptyIllustration: {
+        backgroundColor: theme.colors.backgroundLight,
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    emptyTitle: {
         fontSize: 18,
+        fontWeight: '600',
+        color: theme.colors.text,
+        textAlign: 'center',
+    },
+    emptySubtitle: {
+        fontSize: 14,
         color: theme.colors.textSecondary,
+        textAlign: 'center',
+        maxWidth: 300,
+        lineHeight: 20,
+    },
+    emptyAction: {
         marginTop: 16,
+        backgroundColor: theme.colors.primary,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 8,
+    },
+    emptyActionText: {
+        color: 'white',
+        fontWeight: '600',
     },
 });

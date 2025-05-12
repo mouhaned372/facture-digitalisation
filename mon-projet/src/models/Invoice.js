@@ -128,6 +128,10 @@ const InvoiceSchema = new mongoose.Schema(
             enum: ['pending', 'paid', 'cancelled'],
             default: 'pending'
         },
+        isManualEntry: {
+            type: Boolean,
+            default: false
+        },
         notifications: [NotificationSchema],
         extractedData: {
             type: mongoose.Schema.Types.Mixed,

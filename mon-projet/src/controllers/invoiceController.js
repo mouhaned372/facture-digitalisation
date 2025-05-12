@@ -148,3 +148,49 @@ exports.getOverdueInvoices = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la récupération des factures en retard' });
     }
 };
+exports.createManualInvoice = async (req, res) => {
+    try {
+        const {
+            invoiceNumber,
+            invoiceDate,
+            supplier,
+            items,
+            subtotal,
+            taxAmount,
+            totalAmount,
+            paymentStatus = 'pending'
+        } = req.body;
+
+        // Vérifier si le numéro de facture existe déjà
+        let counter = 1;
+        let originalNumber = invoiceNumber;
+        let finalInvoiceNumber = invoiceNumber;
+
+        while (await Invoice.exists({ invoiceNumber: finalInvoiceNumber })) {
+            finalInvoiceNumber = `${originalNumber}-${counter++}`;
+        }
+
+        const invoice = new Invoice({
+            invoiceNumber: finalInvoiceNumber,
+            invoiceDate,
+            supplier,
+            items,
+            subtotal: subtotal || 0,
+            taxAmount: taxAmount || 0,
+            totalAmount: totalAmount || 0,
+            paymentStatus,
+            isManualEntry: true,
+            extractedData: req.body
+        });
+
+        await invoice.save();
+
+        res.status(201).json(invoice);
+    } catch (error) {
+        console.error('Erreur lors de la création manuelle de facture:', error);
+        res.status(500).json({
+            message: 'Erreur lors de la création de la facture',
+            error: error.message
+        });
+    }
+};

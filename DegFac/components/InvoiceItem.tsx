@@ -4,16 +4,16 @@ import { theme } from '@/constants/theme';
 
 export default function InvoiceItem({ invoice, onPress, isOverdue }) {
     const formatDate = (dateString) => {
-        if (!dateString) return 'Date inconnue';
+        if (!dateString) return '--/--';
 
         try {
             const date = new Date(dateString);
             return date.toLocaleDateString('fr-FR', {
                 day: '2-digit',
-                month: 'short',
+                month: '2-digit',
             });
         } catch {
-            return dateString; // Si c'est déjà au format JJ/MM/AAAA
+            return dateString.split('/').slice(0, 2).join('/');
         }
     };
 
@@ -26,52 +26,60 @@ export default function InvoiceItem({ invoice, onPress, isOverdue }) {
     };
 
     return (
-        <TouchableOpacity onPress={onPress}>
-            <View style={styles.container}>
-                <View style={styles.leftContainer}>
-                    <View style={[
-                        styles.statusIndicator,
-                        invoice.paymentStatus === 'paid'
-                            ? styles.paidStatus
-                            : isOverdue
-                                ? styles.overdueStatus
-                                : styles.pendingStatus
-                    ]} />
+        <TouchableOpacity
+            onPress={onPress}
+            style={[
+                styles.container,
+                isOverdue && styles.overdueContainer
+            ]}
+        >
+            <View style={styles.leftContent}>
+                <View style={[
+                    styles.statusIndicator,
+                    invoice.paymentStatus === 'paid'
+                        ? styles.paidStatus
+                        : isOverdue
+                            ? styles.overdueStatus
+                            : styles.pendingStatus
+                ]} />
 
-                    <View>
-                        <Text style={styles.invoiceNumber}>
-                            {invoice.invoiceNumber || 'N° Inconnu'}
-                        </Text>
-                        <Text style={styles.supplier}>
-                            {invoice.supplier?.name || 'Fournisseur inconnu'}
-                        </Text>
-                    </View>
-                </View>
-
-                <View style={styles.rightContainer}>
-                    <Text style={styles.amount}>
-                        {formatAmount(invoice.totalAmount)}
+                <View>
+                    <Text style={styles.invoiceNumber}>
+                        {invoice.invoiceNumber || 'N° Inconnu'}
                     </Text>
+                    <Text style={styles.supplier} numberOfLines={1}>
+                        {invoice.supplier?.name || 'Fournisseur inconnu'}
+                    </Text>
+                </View>
+            </View>
+
+            <View style={styles.rightContent}>
+                <Text style={styles.amount}>
+                    {formatAmount(invoice.totalAmount)}
+                </Text>
+                <View style={styles.dateContainer}>
+                    <MaterialIcons
+                        name="event"
+                        size={14}
+                        color={theme.colors.textSecondary}
+                    />
                     <Text style={styles.date}>
                         {formatDate(invoice.invoiceDate)}
                     </Text>
                 </View>
-
-                {isOverdue && (
-                    <MaterialIcons
-                        name="warning"
-                        size={20}
-                        color={theme.colors.danger}
-                        style={styles.warningIcon}
-                    />
-                )}
-
-                <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color={theme.colors.textSecondary}
-                />
             </View>
+
+            {isOverdue && (
+                <View style={styles.overdueBadge}>
+                    <MaterialIcons name="warning" size={14} color="white" />
+                </View>
+            )}
+
+            <MaterialIcons
+                name="chevron-right"
+                size={20}
+                color={theme.colors.textSecondary}
+            />
         </TouchableOpacity>
     );
 }
@@ -79,23 +87,31 @@ export default function InvoiceItem({ invoice, onPress, isOverdue }) {
 const styles = StyleSheet.create({
     container: {
         backgroundColor: 'white',
+        borderRadius: 12,
         padding: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottomWidth: 1,
-        borderBottomColor: theme.colors.border,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
     },
-    leftContainer: {
+    overdueContainer: {
+        borderLeftWidth: 4,
+        borderLeftColor: theme.colors.danger,
+    },
+    leftContent: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
+        gap: 12,
     },
     statusIndicator: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginRight: 12,
+        width: 10,
+        height: 10,
+        borderRadius: 5,
     },
     paidStatus: {
         backgroundColor: theme.colors.success,
@@ -107,28 +123,42 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.danger,
     },
     invoiceNumber: {
-        fontWeight: 'bold',
+        fontWeight: '600',
         color: theme.colors.text,
+        fontSize: 15,
     },
     supplier: {
         color: theme.colors.textSecondary,
+        fontSize: 13,
         marginTop: 4,
-        fontSize: 14,
+        maxWidth: 180,
     },
-    rightContainer: {
+    rightContent: {
         alignItems: 'flex-end',
-        marginRight: 12,
+        marginLeft: 12,
+        gap: 4,
     },
     amount: {
-        fontWeight: 'bold',
+        fontWeight: '600',
         color: theme.colors.text,
+        fontSize: 15,
+    },
+    dateContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
     },
     date: {
         color: theme.colors.textSecondary,
-        marginTop: 4,
-        fontSize: 14,
+        fontSize: 12,
     },
-    warningIcon: {
-        marginRight: 8,
+    overdueBadge: {
+        backgroundColor: theme.colors.danger,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: 8,
     },
 });
